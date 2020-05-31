@@ -29,6 +29,10 @@ jobs:
     - name: Run a one-line script
       run: bats tests
 
+    # Run Shellcheck
+    - name: Run ShellCheck
+      uses: ludeeus/action-shellcheck@master
+
   build-macos:
     # The type of runner that the job will run on
     runs-on: macos-latest 
@@ -50,3 +54,7 @@ jobs:
     # Runs a single command using the runners shell
     - name: Run a one-line script
       run: bats tests
+
+    # Run Shellcheck
+    - name: Run ShellCheck
+      uses: ludeeus/action-shellcheck@master
