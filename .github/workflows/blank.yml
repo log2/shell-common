@@ -51,10 +51,6 @@ jobs:
         # The BATS version to setup. Example: 1.0.0 or master, default: 1.1.0
         bats-version: 1.1.0
         
-    # Run Shellcheck
-    - name: Run ShellCheck
-      uses: ludeeus/action-shellcheck@master
-
     # Runs a single command using the runners shell
     - name: Run a one-line script
       run: bats tests
