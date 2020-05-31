@@ -86,7 +86,7 @@ prepare_styling() {
 		STYLE_BOLD="$(tput bold)"
 		STYLE_OFF="$(tput sgr0)"
 		COLOR_NORMAL="$(tput setaf 7)"
-		COLOR_BLACK="$(tput setaf 0)"
+		# COLOR_BLACK="$(tput setaf 0)"
 		COLOR_RED="$(tput setaf 1)"
 		COLOR_GREEN="$(tput setaf 2)"
 		COLOR_YELLOW="$(tput setaf 3)"
