@@ -117,6 +117,28 @@ prepare_styling() {
 			local message=("$@")
 			wrap_color "$COLOR_BLUE" "${message[@]}"
 		}
+
+		ansi() { 
+			local ansi_code="$1"
+			local message=("${@:2}")
+			printf "%b" "\e[${ansi_code}m${message[*]}\e[0m" 
+		}
+		# bold() { 
+		# 	local message=("$@")
+		# 	ansi 1 "${message[@]}" 
+		# }
+		i() { 
+			local message=("$@")
+			ansi 3 "${message[@]}" 
+		}
+		u() { 
+			local message=("$@")
+			ansi 4 "${message[@]}" 
+		}
+		st() { 
+			local message=("$@")
+			ansi 9 "${message[@]}" 
+		}		
 	else
 		logtty "Program tput not found, text styling will be disabled"
 		vanilla() {
