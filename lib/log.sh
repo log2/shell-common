@@ -135,8 +135,13 @@ prepare_styling
 
 err() {
 	local message=("$@")
-	as_log "$(red "${message[@]}")" >&2
-}
+	as_log "$(red "${message[@]}")" 
+} >&2
+
+warn() {
+	local message=("$@")
+	as_log "$(yellow "${message[@]}")"
+} >&2
 
 whine() {
 	local cause="$1"
