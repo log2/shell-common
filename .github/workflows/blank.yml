@@ -21,7 +21,7 @@ jobs:
 
     - name: submodules-init
       uses: snickerbockers/submodules-init@v4
-      
+
     - name: Setup BATS testing framework
       uses: mig4/setup-bats@v1.0.1
       with:
@@ -32,7 +32,7 @@ jobs:
     - name: Run ShellCheck
       uses: ludeeus/action-shellcheck@master
       with:
-        ignore: package.sh
+        ignore: vendor
         
     # Runs a single command using the runners shell
     - name: Run a one-line script
