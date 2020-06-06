@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC1090,SC1091
+. "${BASHER_ROOT:-$(dirname "$(which basher)")/..}/lib/include.${SHELL##*/}"
 
 include log2/shell-common lib/strings.sh
 include log2/shell-common lib/log.sh
@@ -28,16 +30,16 @@ simple_name() {
 	strip_prefix "$(dirname "$file_or_folder")/" "$file_or_folder"
 }
 
-volume_size_data() {
+_volume_size_data() {
 	local file_or_folder="$1"
 	df -h "$file_or_folder" | tail +2
 }
 
-volume_size_component() {
+_volume_size_component() {
 	local volume="$1"
 	local component_index="$2"
 	local space_information
-	read -r -a space_information < <(volume_size_data "$volume")
+	read -r -a space_information < <(_volume_size_data "$volume")
 	trim "${space_information[$component_index]}"
 }
 
@@ -46,7 +48,7 @@ volume_size_component() {
 #
 volume_free_space() {
 	local volume="$1"
-	volume_size_component "$volume" 3
+	_volume_size_component "$volume" 3
 }
 
 #
@@ -54,7 +56,7 @@ volume_free_space() {
 #
 volume_size() {
 	local volume="$1"
-	volume_size_component "$volume" 1
+	_volume_size_component "$volume" 1
 }
 
 #
@@ -62,5 +64,5 @@ volume_size() {
 #
 volume_used_space() {
 	local volume="$1"
-	volume_size_component "$volume" 2
+	_volume_size_component "$volume" 2
 }
