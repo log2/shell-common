@@ -74,12 +74,12 @@ shellmock_escape_quotes()
 }
 
 #------------------------------------
-# Use awk to dete$RMine the match list
+# Use awk to determine the match list
 #------------------------------------
 mock_capture_match()
 {
     local MATCH
-    MATCH=$(shellmock_escape_quotes $1)
+    MATCH=$(shellmock_escape_quotes "$1")
     $CAT "$BATS_TEST_DIRNAME/tmpstubs/$cmd.playback.capture.tmp" | $AWK  'BEGIN{FS="@@"}{if ($5=="E" && ($1 == "'"$MATCH"'")) print; if ($5=="P" && index("'"$MATCH"'",$1)) print; if ($5=="X" && match("'"$MATCH"'", $1)) print}'
 }
 
@@ -178,7 +178,7 @@ shellmock_expect()
         $TOUCH "$BATS_TEST_DIRNAME/tmpstubs/$cmd"
         $ECHO "#!/bin/bash" >> "$BATS_TEST_DIRNAME/tmpstubs/$cmd"
         $ECHO "export BATS_TEST_DIRNAME=\"$BATS_TEST_DIRNAME\"" >> "$BATS_TEST_DIRNAME/tmpstubs/$cmd"
-        $ECHO ". $BATS_TEST_DIRNAME/lib/shellmock.bash" >> "$BATS_TEST_DIRNAME/tmpstubs/$cmd"
+        $ECHO ". $BATS_TEST_DIRNAME/vendor/shellmock/shellmock.bash" >> "$BATS_TEST_DIRNAME/tmpstubs/$cmd"
         $ECHO 'shellmock_capture_cmd '${cmd}'-stub "$*"' >> "$BATS_TEST_DIRNAME/tmpstubs/$cmd"
         $ECHO "shellmock_replay $cmd "'"$*"' >> "$BATS_TEST_DIRNAME/tmpstubs/$cmd"
         $ECHO 'status=$?' >> "$BATS_TEST_DIRNAME/tmpstubs/$cmd"
