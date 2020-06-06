@@ -2,7 +2,7 @@
 
 load test_helper
 
-load lib/shellmock
+load vendor/shellmock/shellmock
 
 include files
 
