@@ -30,7 +30,7 @@
 skipIfNot()
 {
     local doskip
-    if [ ! -z "$TEST_FUNCTION" ]; then
+    if [ -n "$TEST_FUNCTION" ]; then
         doskip=$(echo "$TEST_FUNCTION|" | awk 'BEGIN{RS="|"}{ if ($0=="'"$1"'") print "true";}')
         if [ "$doskip" != "true" ]; then
             skip
@@ -78,7 +78,8 @@ shellmock_escape_quotes()
 #------------------------------------
 mock_capture_match()
 {
-    local MATCH=$(shellmock_escape_quotes $1)
+    local MATCH
+    MATCH=$(shellmock_escape_quotes $1)
     $CAT "$BATS_TEST_DIRNAME/tmpstubs/$cmd.playback.capture.tmp" | $AWK  'BEGIN{FS="@@"}{if ($5=="E" && ($1 == "'"$MATCH"'")) print; if ($5=="P" && index("'"$MATCH"'",$1)) print; if ($5=="X" && match("'"$MATCH"'", $1)) print}'
 }
 
