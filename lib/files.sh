@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC1090,SC1091
-. "${BASHER_ROOT:-$(dirname "$(which basher)")/..}/lib/include.${SHELL##*/}"
+. "${BASHER_ROOT:-$(dirname "$(command -v basher)")/..}/lib/include.${SHELL##*/}"
 
 include log2/shell-common lib/strings.sh
 include log2/shell-common lib/log.sh
