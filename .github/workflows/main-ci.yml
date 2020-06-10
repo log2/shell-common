@@ -32,11 +32,11 @@ jobs:
     - name: Run ShellCheck
       uses: ludeeus/action-shellcheck@master
       with:
-        ignore: vendor stub
+        ignore: vendor stub package.sh
         
     # Runs BATS tests
     - name: Run BATS tests
-      run: BASHER_ROOT=stub/basher BASHER_PREFIX=stub bats tests
+      run: BASHER_ROOT=${GITHUB_WORKSPACE}/stub/basher BASHER_PREFIX=${GITHUB_WORKSPACE}/stub TERM=xterm bats tests
 
   build-macos:
     # The type of runner that the job will run on
@@ -58,5 +58,5 @@ jobs:
         
     # Runs BATS tests
     - name: Run BATS tests
-      run: BASHER_ROOT=stub/basher BASHER_PREFIX=stub bats tests
+      run: BASHER_ROOT=${GITHUB_WORKSPACE}/stub/basher BASHER_PREFIX=${GITHUB_WORKSPACE}/stub TERM=xterm bats tests
 
