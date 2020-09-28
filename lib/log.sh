@@ -218,10 +218,9 @@ req1() {
 	local program="$1"
 	start_log_line "Checking for existence of required program $(b "$program")"
 	if exists "$program" ; then
-		end_log_line "program $(b "$program") found at $(b "$(wh "$program")") (version: $(b "$(get_version $program)"))!"
+		end_log_line "program $(b "$program") found at $(b "$(wh "$program")") (version: $(b "$(get_version "$program")"))!"
 	else
 		end_log_line_err "needed program $(b "$program") is nowhere to be found!"
-		end_log_line_err "Could not find required program $(b "$program")"
 		end_log_line_err "Please try installing $(b "$program") via the following command, which may or may not work:"
 		b brew install "$program" >&2
 		whine "Cowardly refusing to execute this script without the required program. Have a nice day!"
