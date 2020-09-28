@@ -5,11 +5,22 @@ include log2/shell-common lib/strings.sh
 wh() {
 	local command_name="$1"
 	command -v "$command_name" 
-} >/dev/null 2>&1
+} 
+
+get_version() {
+	local command_name="$1"
+	local double_dash_version
+	double_dash_version="$("$command_name" --version 2>/dev/null | head -n 1)"
+	if [ -z "$double_dash_version" ]; then
+		"$command_name" version 2>/dev/null | head -n 1
+	else
+		echo "$double_dash_version"
+	fi
+} 
 
 exists() {
 	local command="$1"
-	wh "$command"
+	wh "$command" >/dev/null 2>&1
 }
 
 istty() {
@@ -32,6 +43,12 @@ istty_err() {
 # 	echo "$*"
 # }
 
+LOG_ON_STDERR=true
+
+is_log_on_stderr() {
+	[ -n "$LOG_ON_STDERR" ]
+}
+
 simple_name() {
 	local file="$1"
 	strip_prefix "$(dirname "$file")/" "$file"
@@ -42,14 +59,34 @@ as_log() {
     echo "$(date +%FT%T%z) - $(simple_name "$0") - ${message[*]}"
 }
 
+emit_log() {
+	local message=("$@")
+	if is_log_on_stderr ; then
+		printf "%b" "${message[@]}" >&2
+	else
+		printf "%b" "${message[@]}"
+	fi
+}
+
+emit_log_line() {
+	local line=("$@")
+	if is_log_on_stderr ; then
+		echo "${line[@]}" >&2
+	else
+		echo "${line[@]}"
+	fi
+}
+
 log() {
 	local message=("$@")
-	as_log "${message[@]}"
+	emit_log_line "$(as_log "${message[@]}")"
 }
 
 start_log_line() {
 	local message=("$@")
-	printf "%b" "$(as_log "${message[@]}") ... "
+	local line
+	line="$(printf "%b" "$(as_log "${message[@]}") ... ")"
+	emit_log "$line"
 }
 
 end_log_line() {
@@ -61,9 +98,9 @@ end_log_line_with_color() {
 	local color="$1"
 	local message=("${@:2}")
 	if istty ; then 
-		"$color" "$(b "${message[@]}")"
+		emit_log_line "$("$color" "$(b "${message[@]}")")"
 	else
-		echo "${message[@]}"
+		emit_log_line "${message[@]}"
 	fi
 }
 
@@ -181,10 +218,9 @@ req1() {
 	local program="$1"
 	start_log_line "Checking for existence of required program $(b "$program")"
 	if exists "$program" ; then
-		end_log_line "program $(b "$program") found at $(b "$(wh "$program")")!"
+		end_log_line "program $(b "$program") found at $(b "$(wh "$program")") (version: $(b "$(get_version "$program")"))!"
 	else
 		end_log_line_err "needed program $(b "$program") is nowhere to be found!"
-		end_log_line_err "Could not find required program $(b "$program")" 
 		end_log_line_err "Please try installing $(b "$program") via the following command, which may or may not work:"
 		b brew install "$program" >&2
 		whine "Cowardly refusing to execute this script without the required program. Have a nice day!"
