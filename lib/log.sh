@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-include log2/shell-common lib/strings.sh
+include "${CALLER_PACKAGE:-"log2/shell-common"}" lib/strings.sh
 
 wh() {
 	local command_name="$1"
