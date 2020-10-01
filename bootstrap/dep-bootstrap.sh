@@ -41,7 +41,7 @@ callerPath=${DEP_CALLER_PATH:-"basherTemp"}
 callerID=$DEP_CALLER_ID
 checkBlanks "$callerID" "$repoBaseURL" "$callerPath"
 
-basher-include() {
+basherInclude() {
     callerPackageName="$packageName-(tag-$packageTag-includedBy-$callerID)"
     if basher list | grep -q "$callerPackageName" && [[ -d "$callerPath/$packageName" ]] ; then
         gitExecute="git --git-dir "$callerPath/$packageName/.git""
@@ -70,18 +70,19 @@ dep() {
             packageTag=$2
             scriptName=$3
             if [[ -z $packageName ]] || [[ -z $packageTag ]] || [[ -z $scriptName ]] ; then
-                >&2 echo "usage: dep include packageName packageTag scriptName"
+                >&2 echo "usage: dep include <packageName> <packageTag> <scriptName>"
                 exit 1
             fi
             checkBlanks "$packageName" "$packageTag" "$scriptName"
             local logSubstring="script '$scriptName.sh' tag=$packageTag git repo=$repoBaseURL/$packageName callerID=$callerID callerPath=$callerPath"
             >&2 echo "including $logSubstring"
-            basher-include "$@"
+            basherInclude "$@"
             >&2 echo "inclued $logSubstring"
             exit
             ;;
         * ) 
             # implement extensibility
+            >&2 echo "usage: dep <command> <options> (currently available commands: [include])"
             exit 1
     esac
 }
