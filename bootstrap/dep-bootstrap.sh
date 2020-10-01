@@ -78,7 +78,6 @@ dep() {
             >&2 echo "including $logSubstring"
             basherInclude "$@"
             >&2 echo "inclued $logSubstring"
-            exit
             ;;
         * ) 
             # implement extensibility
