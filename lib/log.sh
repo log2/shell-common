@@ -219,7 +219,7 @@ req1() {
     local version="$2"
 	start_log_line "Checking for existence of required program $(b "$program")"
 	if exists "$program" ; then
-        if [[ "$version" = "--no-version" ]] ; then
+        if [ "$version" = "--no-version" ] ; then
             version="na"
         else
             version="$(get_version "$program")"
