@@ -1,7 +1,23 @@
 #!/usr/bin/env bash
+scriptName="dep-bootstrap.sh"
+scriptVersion=0.1.0-SNAPSHOT
+>&2 echo "Running $scriptName version=$scriptVersion"
 
 basherExecutable="${BASHER_ROOT:-$HOME/.basher}/bin/basher"
 shellName="${SHELL##*/}"
+case $shellName in
+    "ash")
+        shellNameFallback="sh"
+        ;;
+    *)
+        shellNameFallback=$shellName
+        ;;
+esac
+
+# shellcheck disable=SC2016
+rcFileLine1='export PATH="'$(dirname "$basherExecutable")':$PATH"'
+# shellcheck disable=SC2016
+rcFileLine2='eval "$('$basherExecutable' init - '$shellName')"'
 
 if [[ $1 == "install" ]] ; then
     if [ -f "$basherExecutable" ]; then
@@ -9,7 +25,7 @@ if [[ $1 == "install" ]] ; then
     else
         >&2 echo "Basher executable not found, cloning git repo..."
         git clone https://github.com/basherpm/basher.git "$HOME"/.basher
-        case $shellName in
+        case $shellNameFallback in
             "bash")
                 rcFile=".bashrc"
                 ;;
@@ -27,20 +43,19 @@ if [[ $1 == "install" ]] ; then
                 exit 1
                 ;;
         esac
-        # shellcheck disable=SC2016
-        rcFileLine1='export PATH="'$(dirname "$basherExecutable")':$PATH"'
         echo "$rcFileLine1" >> "$HOME"/$rcFile
-        # shellcheck disable=SC2016
-        rcFileLine2='eval "$('$basherExecutable' init - '$shellName')"'
         echo "$rcFileLine2" >> "$HOME"/$rcFile
         >&2 echo "Basher installation completed"
     fi
     exit
 fi
 
-scriptName=$(basename "${BASH_SOURCE[0]}")
-scriptVersion=0.1.0-SNAPSHOT
->&2 echo "Running $scriptName version=$scriptVersion"
+if [[ $1 == "init" ]] ; then
+    >&2 echo "Initializing basher"
+    eval "$rcFileLine1"
+    eval "$rcFileLine2"
+    return
+fi
 
 if [[ $DEP_SOURCED == 1  ]]; then 
     >&2 echo "Error invoking '$scriptName' (already sourced)"
@@ -55,7 +70,7 @@ fi
 if [ -f "$basherExecutable" ]; then
     >&2 echo "Detected shell=$shellName basher=$basherExecutable"
     # shellcheck disable=SC1090
-    source "$(dirname "$basherExecutable")/../lib/include.$shellName"
+    . "$(dirname "$basherExecutable")/../lib/include.$shellNameFallback"
     DEP_SOURCED=1
 else
     >&2 echo "Unable to find basher executable, try installing using command: '$scriptName install'"
@@ -79,10 +94,6 @@ callerID=$DEP_CALLER_ID
 checkBlanks "$callerID" "$repoBaseURL" "$callerPath"
 
 dep() {
-    echo "$PATH"
-    tail -n 5 "$HOME"/.bashrc
-    which basher
-
     command=$1
     if [[ -z $command ]] ; then
         >&2 echo "usage: dep <command> <options> (currently available commands: [include])"
@@ -101,8 +112,16 @@ dep_include() {
         exit 1
     fi
     checkBlanks "$packageName" "$packageTag" "$scriptName"
+
     local logSubstring="script '$scriptName.sh' tag=$packageTag git repo=$repoBaseURL/$packageName callerID=$callerID callerPath=$callerPath"
+    local included=" $packageName-$scriptName "
     >&2 echo "including $logSubstring"
+    if [[ $DEP_INCLUDE_ALL = *$included* ]] ; then
+        >&2 echo "already included, skipping"
+        return
+    else
+        DEP_INCLUDE_ALL="$DEP_INCLUDE_ALL$included" 
+    fi
 
     callerPackageName="$packageName-(tag-$packageTag-includedBy-$callerID)"
     if $basherExecutable list | grep -q "$callerPackageName" && [[ -d "$callerPath/$packageName" ]] ; then
