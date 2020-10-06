@@ -7,8 +7,8 @@
 begins_with() {
 	local prefix="$1"
 	local string="$2"
-	if [[ "$string" == "$prefix"* ]]; then
-		true
+    if case "$string" in "$prefix"*) ;; *) false;; esac; then
+        true
 	else
 		false
 	fi
