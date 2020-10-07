@@ -131,8 +131,8 @@ dep_include() {
         fi
     else
         $basherExecutable uninstall "$versionedPackageName" 1>&2
-        [ ! -d "$basherLocalRepo" ] && mkdir -p "$localPackagePath"
-        rm -rf "$basherLocalRepo"
+        [ ! -d "$localPackagePath" ] && mkdir -p "$localPackagePath"
+        rm -rf "$localPackagePath"
         git clone --depth 1 --branch "$packageTag" "$repoBaseURL/$packageName" "$localPackagePath" || exit 1
         $basherExecutable link "$localPackagePath" "$versionedPackageName" || exit 1
     fi
