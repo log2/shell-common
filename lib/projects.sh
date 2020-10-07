@@ -11,7 +11,7 @@ get_version() {
     local vFileAngular="package.json"
     local vFileHelm="Chart.yaml"
 
-    local baseDir=$1
+    local baseDir=${1:-.}
     log "searching version file in path: $baseDir"
 
     local vFileBasicPath="$baseDir/$vFileBasic"
@@ -58,14 +58,14 @@ get_version() {
 }
 
 get_branch() {
-    local baseDir=$1
-    git_branch=$(cd "$1" && git rev-parse --abbrev-ref HEAD)
+    local baseDir=${1:-.}
+    git_branch=$(cd "$baseDir" && git rev-parse --abbrev-ref HEAD)
     echo "$git_branch"
 }
 
 get_tag() {
-    local baseDir=$1
-    git_tag=$(cd "$1" && git describe --exact-match --tags)
+    local baseDir=${1:-.}
+    git_tag=$(cd "$baseDir" && git describe --exact-match --tags)
     echo "$git_tag"
 }
 
@@ -75,7 +75,7 @@ get_patch_number() {
 }
 
 check_version() {
-    local baseDir=$1
+    local baseDir=${1:-.}
     local version
     version=$(get_version "$baseDir")
     local branch
@@ -138,8 +138,9 @@ docker_push() {
 }
 
 create_version_tag() {
-    local baseDir=$1
-    local version=$2
+    local baseDir=${1:-.}
+    local version
+    version=$(get_version "$baseDir")
     (
         cd "$baseDir" || exit 1
         if [ -z "$(git status --porcelain)" ]; then 
