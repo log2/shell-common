@@ -60,14 +60,12 @@ get_version() {
 get_branch() {
     local baseDir=$1
     git_branch=$(cd "$1" && git rev-parse --abbrev-ref HEAD)
-    log "branch=$git_branch"
     echo "$git_branch"
 }
 
 get_tag() {
     local baseDir=$1
     git_tag=$(cd "$1" && git describe --exact-match --tags)
-    log "tag=$git_tag"
     echo "$git_tag"
 }
 
@@ -113,6 +111,7 @@ check_version() {
         esac
     }
 
+    log "checking version $version in branch $branch"
     case "$branch" in
         "master")
             check_master "$version"
@@ -123,6 +122,8 @@ check_version() {
         *)
             whine "unsupported branch $branch"
     esac
+
+    echo "$version"
 }
 
 docker_push() {
@@ -134,4 +135,18 @@ docker_push() {
     remoteImage="$remoteHost/$repoName:$remoteTag"
     docker tag "$repoName:$localTag" "$remoteImage"
     docker push "$remoteImage"
+}
+
+create_version_tag() {
+    local baseDir=$1
+    local version=$2
+    (
+        cd "$baseDir" || exit 1
+        if [ -z "$(git status --porcelain)" ]; then 
+            git tag "$version"
+            log "added tag: $version"
+        else
+            whine "uncommitted changes found"
+        fi
+    )    
 }
