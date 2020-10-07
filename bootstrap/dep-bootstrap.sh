@@ -3,10 +3,10 @@ scriptName="dep-bootstrap.sh"
 scriptVersion=0.1.0-SNAPSHOT
 >&2 echo "Running $scriptName version=$scriptVersion"
 
-basherExecutable="${BASHER_ROOT:-$HOME/.basher}/bin/basher"
 shellName="${SHELL##*/}"
 case $shellName in
     "ash")
+        >&2 echo "using fallback shell 'sh' to serve current shell 'ash"
         shellNameFallback="sh"
         ;;
     *)
@@ -14,6 +14,9 @@ case $shellName in
         ;;
 esac
 
+basherDir="${BASHER_ROOT:-$HOME/.basher}"
+basherExecutable="$basherDir/bin/basher"
+basherLocalRepo="$basherDir/repo"
 # shellcheck disable=SC2016
 rcFileLine1='export PATH="'$(dirname "$basherExecutable")':$PATH"'
 # shellcheck disable=SC2016
@@ -62,11 +65,6 @@ if [[ $DEP_SOURCED == 1  ]]; then
     exit 1
 fi
 
-if [[ -z $DEP_CALLER_ID ]] ; then
-    >&2 echo "Missing variable DEP_CALLER_ID"
-    exit 1
-fi
-
 if [ -f "$basherExecutable" ]; then
     >&2 echo "Detected shell=$shellName basher=$basherExecutable"
     # shellcheck disable=SC1090
@@ -89,9 +87,7 @@ checkBlanks() {
 }
 
 repoBaseURL=${DEP_REPO_BASE_URL:-"https://github.com"}
-callerPath=${DEP_CALLER_PATH:-"basherTemp"}
-callerID=$DEP_CALLER_ID
-checkBlanks "$callerID" "$repoBaseURL" "$callerPath"
+checkBlanks "$repoBaseURL"
 
 dep() {
     command=$1
@@ -113,7 +109,7 @@ dep_include() {
     fi
     checkBlanks "$packageName" "$packageTag" "$scriptName"
 
-    local logSubstring="script '$scriptName.sh' tag=$packageTag git repo=$repoBaseURL/$packageName callerID=$callerID callerPath=$callerPath"
+    local logSubstring="script '$scriptName.sh' tag=$packageTag git repo=$repoBaseURL/$packageName local repo=$basherLocalRepo"
     local included=" $packageName-$scriptName "
     >&2 echo "including $logSubstring"
     if [[ $DEP_INCLUDE_ALL = *$included* ]] ; then
@@ -123,23 +119,25 @@ dep_include() {
         DEP_INCLUDE_ALL="$DEP_INCLUDE_ALL$included" 
     fi
 
-    callerPackageName="$packageName-(tag-$packageTag-includedBy-$callerID)"
-    if $basherExecutable list | grep -q "$callerPackageName" && [[ -d "$callerPath/$packageName" ]] ; then
-        gitExecute="git --git-dir "$callerPath/$packageName/.git""
+    versionedPackageName="$packageName-$packageTag"
+    localPackagePath="$basherLocalRepo/$packageName/$packageTag"
+    if [[ $packageTag != *"-SNAPSHOT" ]] && [[ -d "$localPackagePath" ]] && $basherExecutable list | grep -q "$versionedPackageName" ; then
+        >&2 echo "found existing local copy of: '$versionedPackageName'"
+        gitExecute="git --git-dir "$localPackagePath/.git""
         existingTag=$($gitExecute describe --exact-match --tags) || exit 1
-        >&2 echo "found existingTag: $existingTag"
         if [[ "$existingTag" != "$packageTag" ]] ; then
-            eval "$gitExecute" fetch --all --tags -q
-            eval "$gitExecute" checkout -q "tags/$packageTag"
+             >&2 echo "unexpected local tag found: '$existingTag'. Expected: '$packageTag'"
+             exit 1
         fi
     else
-        [ ! -d "$callerPath" ] && mkdir -p "$callerPath"
-        rm -rf "./$callerPath/$packageName"
-        git clone --depth 1 --branch "$packageTag" "$repoBaseURL/$packageName" "$callerPath/$packageName" || exit 1
-        $basherExecutable link "$callerPath/$packageName" "$callerPackageName" || exit 1
+        $basherExecutable uninstall "$versionedPackageName" 1>&2
+        [ ! -d "$basherLocalRepo" ] && mkdir -p "$localPackagePath"
+        rm -rf "$basherLocalRepo"
+        git clone --depth 1 --branch "$packageTag" "$repoBaseURL/$packageName" "$localPackagePath" || exit 1
+        $basherExecutable link "$localPackagePath" "$versionedPackageName" || exit 1
     fi
 
-    CALLER_PACKAGE=$callerPackageName include "$callerPackageName" "lib/$scriptName.sh" || exit 1
+    CALLER_PACKAGE=$versionedPackageName include "$versionedPackageName" "lib/$scriptName.sh" || exit 1
 
     >&2 echo "inclued $logSubstring"
 }
