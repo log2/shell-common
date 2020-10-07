@@ -224,7 +224,7 @@ req1() {
         else
             version="$(get_version "$program")"
         fi
-		end_log_line "program $(b "$program") found at $(b "$(wh "$program")") (version: $(b  $version))!"
+		end_log_line "program $(b "$program") found at $(b "$(wh "$program")") (version: $(b  "$version"))!"
 	else
 		end_log_line_err "needed program $(b "$program") is nowhere to be found!"
 		end_log_line_err "Please try installing $(b "$program") via the following command, which may or may not work:"
