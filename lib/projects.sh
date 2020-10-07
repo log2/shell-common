@@ -63,10 +63,16 @@ get_branch() {
     echo "$git_branch"
 }
 
-get_tag() {
+get_current_tag() {
     local baseDir=${1:-.}
     git_tag=$(cd "$baseDir" && git describe --exact-match --tags)
     echo "$git_tag"
+}
+
+tag_exists() {
+    local baseDir=$1
+    local tag=$2
+    (cd "$baseDir" && git tag | grep "^$tag$" 1>&2 )
 }
 
 get_patch_number() {
@@ -80,18 +86,24 @@ check_version() {
     version=$(get_version "$baseDir")
     local branch
     branch=$(get_branch "$baseDir")
-    # tag=$(get_tag "$baseDir")
 
     local snapshotSuffix="-SNAPSHOT"
     local rcSuffix="-rc"
 
     check_master() {
-        case "$1" in
+        local baseDir=$1
+        local version=$2
+        case "$version" in
             *$snapshotSuffix)
                 whine "SNAPSHOT version not allowed in master branch"
                 ;;
             *$rcSuffix*)
                 whine "rc version not allowed in master branch"
+                ;;
+            *)
+                if tag_exists "$baseDir" "$version" ; then
+                    whine "tag $version already found"
+                fi
                 ;;
         esac
     }
@@ -114,7 +126,7 @@ check_version() {
     log "checking version $version in branch $branch"
     case "$branch" in
         "master")
-            check_master "$version"
+            check_master "$baseDir" "$version"
             ;;
         "develop")
             check_develop "$version"
