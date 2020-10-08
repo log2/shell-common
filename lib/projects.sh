@@ -114,11 +114,11 @@ check_version() {
                 strippedSnapshot=${1%%$snapshotSuffix}
                 patchNumber=$(get_patch_number "$strippedSnapshot")
                 if [[ $patchNumber != 0 ]] ; then
-                    whine "non-zero patch version not allowed in develop branch"
+                    whine "non-zero patch version not allowed in develop/feature branch"
                 fi
                 ;;
             *)
-                whine "non SNAPSHOT version not allowed in develop branch"
+                whine "non SNAPSHOT version not allowed in develop/feature branch"
                 ;;
         esac
     }
@@ -128,7 +128,7 @@ check_version() {
         "master")
             check_master "$baseDir" "$version"
             ;;
-        "develop")
+        "develop" | "feature/"*)
             check_develop "$version"
             ;;
         *)
