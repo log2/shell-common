@@ -2,7 +2,7 @@
 
 include "${CALLER_PACKAGE:-"log2/shell-common"}" lib/log.sh
 
-req xmlstarlet
+# req xmlstarlet
 
 get_version() {
     local vFileBasic="version"
