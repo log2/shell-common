@@ -61,7 +61,7 @@ get_branch() {
     local baseDir=${1:-.}
     headRef=$(git rev-parse HEAD)
     local branch
-    branch=$(git for-each-ref --format='%(objectname) %(refname:short)' refs/heads | awk "/^$headRef/ {print \$2}")
+    branch=$(git for-each-ref --format='%(objectname) %(refname:short)' refs | awk "/^$headRef/ {print \$2}")
     branch=${branch##origin/}
     echo "$branch"
 }
