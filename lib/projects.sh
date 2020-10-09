@@ -59,8 +59,11 @@ get_version() {
 
 get_branch() {
     local baseDir=${1:-.}
-    git_branch=$(cd "$baseDir" && git rev-parse --abbrev-ref HEAD)
-    echo "$git_branch"
+    headRef=$(git rev-parse HEAD)
+    local branch
+    branch=$(git for-each-ref --format='%(objectname) %(refname:short)' refs/heads | awk "/^$headRef/ {print \$2}")
+    branch=${branch##origin/}
+    echo "$branch"
 }
 
 get_current_tag() {
