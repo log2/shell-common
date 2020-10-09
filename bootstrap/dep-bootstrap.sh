@@ -22,7 +22,7 @@ rcFileLine1='export PATH="'$(dirname "$basherExecutable")':$PATH"'
 # shellcheck disable=SC2016
 rcFileLine2='eval "$('$basherExecutable' init - '$shellName')"'
 
-if [[ $1 == "install" ]] ; then
+if [[ "$1" == "install" ]] ; then
     if [ -f "$basherExecutable" ]; then
         >&2 echo "Basher executable already present, skipping installation"
     else
@@ -53,20 +53,18 @@ if [[ $1 == "install" ]] ; then
     exit
 fi
 
-if [[ $1 == "init" ]] ; then
-    >&2 echo "Initializing basher"
-    eval "$rcFileLine1"
-    eval "$rcFileLine2"
-    return
-fi
-
-if [[ $DEP_SOURCED == 1  ]]; then 
+if [[ "$DEP_SOURCED" == 1  ]]; then 
     >&2 echo "Error invoking '$scriptName' (already sourced)"
     exit 1
 fi
 
 if [ -f "$basherExecutable" ]; then
     >&2 echo "Detected shell=$shellName basher=$basherExecutable"
+    if ! command -v basher ; then
+        >&2 echo "basher command not available, initializing..."
+        eval "$rcFileLine1"
+        eval "$rcFileLine2"
+    fi
     # shellcheck disable=SC1090
     . "$(dirname "$basherExecutable")/../lib/include.$shellNameFallback"
     DEP_SOURCED=1
@@ -133,7 +131,7 @@ dep_include() {
         $basherExecutable uninstall "$versionedPackageName" 1>&2
         [ ! -d "$localPackagePath" ] && mkdir -p "$localPackagePath"
         rm -rf "$localPackagePath"
-        git clone --depth 1 --branch "$packageTag" "$repoBaseURL/$packageName" "$localPackagePath" || exit 1
+        git -c advice.detachedHead=false clone --depth 1 --branch "$packageTag" "$repoBaseURL/$packageName" "$localPackagePath" || exit 1
         $basherExecutable link "$localPackagePath" "$versionedPackageName" || exit 1
     fi
 
