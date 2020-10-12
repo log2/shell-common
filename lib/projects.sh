@@ -68,9 +68,12 @@ git_branch() {
     local baseDir=${1:-.}
     commitId=$(git_commit "$baseDir")
     local branch
-    #branch=$(cd "$baseDir" && git for-each-ref --format='%(objectname) %(refname:short)' refs | awk "/^$commitId/ {print \$2}")
     branch=$(cd "$baseDir" && git rev-parse --abbrev-ref HEAD)
-    branch=${branch##origin/}
+    if [[ "$branch" = "HEAD" ]] ; then
+        #FIXME possible problems if more than one branch found
+        branch=$(cd "$baseDir" && git for-each-ref --format='%(objectname) %(refname:short)' refs | awk "/^$commitId/ {print \$2}")
+        branch=${branch##origin/}
+    fi
     echo "$branch"
 }
 
