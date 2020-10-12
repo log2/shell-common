@@ -46,6 +46,7 @@ get_version() {
     if [ -f "$vFileHelmPath" ]; then
         vFiles="$vFiles'$vFileHelm'"
         whine "implement me"
+        #yq r - "version"<chart/Chart.yaml
         ((count++))
     fi
     if [ "$count" = 0 ]; then
@@ -57,14 +58,24 @@ get_version() {
     echo "$version"
 }
 
+get_commit() {
+    local baseDir=${1:-.}
+    commitId=$(cd "$baseDir" && git rev-parse HEAD)
+    echo "$commitId"
+}
+
 get_branch() {
     local baseDir=${1:-.}
-    headRef=$(git rev-parse HEAD)
+    commitId=$(get_commit "$baseDir")
     local branch
-    branch=$(git for-each-ref --format='%(objectname) %(refname:short)' refs | awk "/^$headRef/ {print \$2}")
+    #branch=$(cd "$baseDir" && git for-each-ref --format='%(objectname) %(refname:short)' refs | awk "/^$commitId/ {print \$2}")
+    branch=$(cd "$baseDir" && git rev-parse --abbrev-ref HEAD)
     branch=${branch##origin/}
     echo "$branch"
 }
+
+# se non sono su un branch sono in detached head. trattare sto caso separatamente.
+# il branch attuale è "git rev-parse --abbrev-ref HEAD"
 
 get_current_tag() {
     local baseDir=${1:-.}
@@ -145,7 +156,7 @@ docker_push() {
     local repoName=$1
     local localTag=$2
     local remoteTag=$3
-    local remoteHost=$4 # "116325564800.dkr.ecr.eu-central-1.amazonaws.com"
+    local remoteHost=$4
 
     remoteImage="$remoteHost/$repoName:$remoteTag"
     docker tag "$repoName:$localTag" "$remoteImage"
