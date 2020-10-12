@@ -4,7 +4,7 @@ include "${CALLER_PACKAGE:-"log2/shell-common"}" lib/log.sh
 
 # req xmlstarlet
 
-get_version() {
+project_version() {
     local vFileBasic="version"
     local vFileMaven="pom.xml"
     local vFileGradle="build.gradle"
@@ -58,15 +58,15 @@ get_version() {
     echo "$version"
 }
 
-get_commit() {
+git_commit() {
     local baseDir=${1:-.}
     commitId=$(cd "$baseDir" && git rev-parse HEAD)
     echo "$commitId"
 }
 
-get_branch() {
+git_branch() {
     local baseDir=${1:-.}
-    commitId=$(get_commit "$baseDir")
+    commitId=$(git_commit "$baseDir")
     local branch
     #branch=$(cd "$baseDir" && git for-each-ref --format='%(objectname) %(refname:short)' refs | awk "/^$commitId/ {print \$2}")
     branch=$(cd "$baseDir" && git rev-parse --abbrev-ref HEAD)
@@ -74,16 +74,13 @@ get_branch() {
     echo "$branch"
 }
 
-# se non sono su un branch sono in detached head. trattare sto caso separatamente.
-# il branch attuale è "git rev-parse --abbrev-ref HEAD"
-
-get_current_tag() {
+git_current_tag() {
     local baseDir=${1:-.}
     git_tag=$(cd "$baseDir" && git describe --exact-match --tags)
     echo "$git_tag"
 }
 
-tag_exists() {
+git_tag_exists() {
     local baseDir=$1
     local tag=$2
     (cd "$baseDir" && git tag | grep "^$tag$" 1>&2 )
@@ -97,12 +94,12 @@ get_patch_number() {
 check_version() {
     local baseDir=${1:-.}
     local version
-    version=$(get_version "$baseDir")
+    version=$(project_version "$baseDir")
     local branch
-    branch=$(get_branch "$baseDir")
+    branch=$(git_branch "$baseDir")
 
     local snapshotSuffix="-SNAPSHOT"
-    local rcSuffix="-rc"
+    local rcKey="-rc"
 
     check_master() {
         local baseDir=$1
@@ -111,7 +108,7 @@ check_version() {
             *$snapshotSuffix)
                 whine "SNAPSHOT version not allowed in master branch"
                 ;;
-            *$rcSuffix*)
+            *$rcKey*)
                 whine "rc version not allowed in master branch"
                 ;;
             *)
@@ -166,7 +163,7 @@ docker_push() {
 create_version_tag() {
     local baseDir=${1:-.}
     local version
-    version=$(get_version "$baseDir")
+    version=$(project_version "$baseDir")
     (
         cd "$baseDir" || exit 1
         if [ -z "$(git status --porcelain)" ]; then 
