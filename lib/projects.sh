@@ -9,7 +9,7 @@ project_version() {
     local vFileMaven="pom.xml"
     local vFileGradle="build.gradle"
     local vFileAngular="package.json"
-    local vFileHelm="Chart.yaml"
+    local vFileHelm="chart/Chart.yaml"
 
     local baseDir=${1:-.}
     log "searching version file in path: $baseDir"
@@ -40,13 +40,12 @@ project_version() {
     fi
     if [ -f "$vFileAngularPath" ]; then
         vFiles="$vFiles'$vFileAngular'"
-        whine "implement me"
+        version=$(jq '.version'<"$vFileAngularPath")
         ((count++))
     fi
     if [ -f "$vFileHelmPath" ]; then
         vFiles="$vFiles'$vFileHelm'"
-        whine "implement me"
-        #yq r - "version"<chart/Chart.yaml
+        version=$(yq r - "version"<"$vFileHelmPath")
         ((count++))
     fi
     if [ "$count" = 0 ]; then
