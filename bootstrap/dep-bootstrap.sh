@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-scriptName="dep-bootstrap.sh"
+scriptName=dep-bootstrap.sh
 scriptVersion=0.1.0-SNAPSHOT
 >&2 echo "Running $scriptName version=$scriptVersion"
 
@@ -98,14 +98,19 @@ dep() {
 }
 
 dep_include() {
-    packageName=$1
-    packageTag=$2
-    scriptName=$3
-    if [[ -z $packageName ]] || [[ -z $packageTag ]] || [[ -z $scriptName ]] ; then
-        >&2 echo "usage: dep include <packageName> <packageTag> <scriptName>"
+    packageNameTag=$1
+    scriptName=$2
+    if [[ -z $packageNameTag ]] || [[ -z $scriptName ]] ; then
+        >&2 echo "usage: dep include <packageName:packageTag> <scriptName>"
         exit 1
     fi
-    checkBlanks "$packageName" "$packageTag" "$scriptName"
+    checkBlanks "$packageNameTag" "$scriptName"
+
+    local arr
+    #shellcheck disable=SC2206
+    arr=(${packageNameTag//:/ })
+    packageName=${arr[0]}
+    packageTag=${arr[1]}
 
     local logSubstring="script '$scriptName.sh' tag=$packageTag git repo=$repoBaseURL/$packageName local repo=$basherLocalRepo"
     local included=" $packageName-$scriptName "
