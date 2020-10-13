@@ -7,7 +7,7 @@ include "${CALLER_PACKAGE:-"log2/shell-common"}" lib/log.sh
 project_version() {
     local vFileBasic="version"
     local vFileMaven="pom.xml"
-    local vFileGradle="build.gradle"
+    local vFileGradle="app/versions.gradle"
     local vFileAngular="package.json"
     local vFileHelm="chart/Chart.yaml"
 
@@ -35,7 +35,7 @@ project_version() {
     fi
     if [ -f "$vFileGradlePath" ]; then
         vFiles="$vFiles'$vFileGradle'"
-        whine "implement me"
+        version=$(grep "commonVersion" "$vFileGradlePath" | sed 's/.*"\(.*\)".*/\1/')
         ((count++))
     fi
     if [ -f "$vFileAngularPath" ]; then
