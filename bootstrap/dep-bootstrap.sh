@@ -60,7 +60,7 @@ fi
 
 if [ -f "$basherExecutable" ]; then
     >&2 echo "Detected shell=$shellName basher=$basherExecutable"
-    if ! command -v basher ; then
+    if ! command -v basher >/dev/null ; then
         >&2 echo "basher command not available, initializing..."
         eval "$rcFileLine1"
         eval "$rcFileLine2"
