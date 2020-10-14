@@ -57,6 +57,17 @@ project_version() {
     echo "$version"
 }
 
+unique_snapshot_version() {
+    local version="$1"
+    local id="$2"
+    if [[ "$version" != *"-SNAPSHOT" ]] ; then 
+        whine "invalid version: $version"
+    fi
+    # shellcheck disable=SC2001
+    bareVersion=$(echo "$version" | sed 's/\(.*\)-SNAPSHOT/\1/')
+    echo "$bareVersion-$id-SNAPSHOT"
+}
+
 git_commit() {
     local baseDir=${1:-.}
     commitId=$(cd "$baseDir" && git rev-parse HEAD)
