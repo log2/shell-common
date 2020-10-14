@@ -64,7 +64,7 @@ unique_snapshot_version() {
         whine "invalid version: $version"
     fi
     # shellcheck disable=SC2001
-    bareVersion=$(echo "$version" | sed 's/\(.*\)-SNAPSHOT/\1/')
+    bareVersion=${version%-SNAPSHOT}
     echo "$bareVersion-$id-SNAPSHOT"
 }
 
