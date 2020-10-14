@@ -57,15 +57,26 @@ project_version() {
     echo "$version"
 }
 
-unique_snapshot_version() {
+add_version_qualifier() {
     local version="$1"
-    local id="$2"
-    if [[ "$version" != *"-SNAPSHOT" ]] ; then 
-        whine "invalid version: $version"
+    local qualifier="$2"
+    if [[ "$version" = *"-SNAPSHOT" ]] ; then 
+        baseVersion=${version%-SNAPSHOT}
+        echo "$baseVersion-$qualifier-SNAPSHOT"
+    else
+        echo "$version-$qualifier"
     fi
-    # shellcheck disable=SC2001
-    bareVersion=${version%-SNAPSHOT}
-    echo "$bareVersion-$id-SNAPSHOT"
+}
+
+add_snapshot_id() {
+    local version="$1"
+    local baseDir=${2:-.}
+    if [[ "$version" = *"-SNAPSHOT" ]] ; then 
+        commitId=$(git_commit)
+        echo "$version-$commitId"
+    else
+        echo "$version"
+    fi
 }
 
 git_commit() {
