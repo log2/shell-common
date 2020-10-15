@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-include log2/shell-common lib/strings.sh
+include "${CALLER_PACKAGE:-"log2/shell-common"}" lib/strings.sh
 
 wh() {
 	local command_name="$1"
@@ -216,9 +216,15 @@ whine() {
 
 req1() {
 	local program="$1"
+    local version="$2"
 	start_log_line "Checking for existence of required program $(b "$program")"
 	if exists "$program" ; then
-		end_log_line "program $(b "$program") found at $(b "$(wh "$program")") (version: $(b "$(get_version "$program")"))!"
+        if [ "$version" = "--no-version" ] ; then
+            version="na"
+        else
+            version="$(get_version "$program")"
+        fi
+		end_log_line "program $(b "$program") found at $(b "$(wh "$program")") (version: $(b  "$version"))!"
 	else
 		end_log_line_err "needed program $(b "$program") is nowhere to be found!"
 		end_log_line_err "Please try installing $(b "$program") via the following command, which may or may not work:"
@@ -228,8 +234,17 @@ req1() {
 }
 
 req() {
+    # FIXME use collect-then-check pattern
 	log "Performing pre-boot script sanity checks..."
 	for p in "$@"; do req1 "${p}" ; done
+	log "$(green "Script sanity checks completed successfully, current script $(b "$0") can start!")"
+	log
+}
+
+req_no_ver() {
+    # FIXME use collect-then-check pattern
+	log "Performing pre-boot script sanity checks..."
+	for p in "$@"; do req1 "${p}" "--no-version"; done
 	log "$(green "Script sanity checks completed successfully, current script $(b "$0") can start!")"
 	log
 }
