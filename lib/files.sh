@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
-# shellcheck disable=SC1090,SC1091
-. "${BASHER_ROOT:-$(dirname "$(command -v basher)")/..}/lib/include.${SHELL##*/}"
 
-include "${CALLER_PACKAGE:-"log2/shell-common"}" lib/strings.sh
-include "${CALLER_PACKAGE:-"log2/shell-common"}" lib/log.sh
+if type dep &>/dev/null ; then
+    dep include log2/shell-common log
+    dep include log2/shell-common strings
+else
+    include log2/shell-common lib/log.sh
+    include log2/shell-common lib/strings.sh
+fi
 
 #
 # Create $1 as a folder if it does not already exists as a file
