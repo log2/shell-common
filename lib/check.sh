@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 
-include "${CALLER_PACKAGE:-"log2/shell-common"}" lib/log.sh
+if type dep &>/dev/null ; then
+    dep include log2/shell-common log
+else
+    include log2/shell-common lib/log.sh
+fi
 
 req shellcheck
 
