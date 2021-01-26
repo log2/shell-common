@@ -13,17 +13,23 @@ wh() {
 
 get_version() {
 	local command_name="$1"
-	version="$($command_name --version 2>/dev/null | head -n 1)"
-	if [ -n "$version" ]; then
-		trim "$version"
-		return
+	if commandOutput=$($command_name --version 2>&1) ; then
+		:	
+	elif commandOutput=$($command_name version 2>&1) ; then
+		:
+	else 
+		exit_err "get_version failed"
 	fi
-	version="$($command_name version 2>/dev/null | head -n 1)"
-	if [ -n "$version" ]; then
-		trim "$version"
-		return
+	if [ -n "$commandOutput" ]; then
+		while IFS= read -r line; do
+			if [[ $line != "" ]] ; then
+				trim "$line"
+				break
+			fi
+		done <<< "$commandOutput"
+	else
+		exit_err "get_version has no output"
 	fi
-	exit_err "get_version failed"
 } 
 
 exists() {
