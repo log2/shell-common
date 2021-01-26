@@ -13,13 +13,17 @@ wh() {
 
 get_version() {
 	local command_name="$1"
-	local double_dash_version
-	double_dash_version="$("$command_name" --version 2>/dev/null | head -n 1)"
-	if [ -z "$double_dash_version" ]; then
-		"$command_name" version 2>/dev/null | head -n 1
-	else
-		echo "$double_dash_version"
+	version="$($command_name --version 2>/dev/null | head -n 1)"
+	if [ -n "$version" ]; then
+		trim "$version"
+		return
 	fi
+	version="$($command_name version 2>/dev/null | head -n 1)"
+	if [ -n "$version" ]; then
+		trim "$version"
+		return
+	fi
+	exit_err "get_version failed"
 } 
 
 exists() {
@@ -79,6 +83,14 @@ emit_log_line() {
 	else
 		echo "${line[@]}"
 	fi
+}
+
+exit_err() {
+	local message=("$@")
+	emit_log_line
+	emit_log_line "[ERROR]"
+	emit_log_line "$(as_log "${message[@]}")"
+	exit 1
 }
 
 log() {
@@ -145,6 +157,8 @@ prepare_styling() {
 		wrap_color() {
 			local color_prefix="$1"
 			local message=("${@:2}")
+			#FIXME seems to be not working properly (try using getaf for storing default color)
+			# echo "${message[@]}"
 			echo "$color_prefix$(replace_style_off "$color_prefix" "${message[@]}")$COLOR_NORMAL"
 		}
 		red() {
@@ -225,10 +239,10 @@ req1() {
 	if exists "$program" ; then
         if [ "$version" = "--no-version" ] ; then
             version="na"
-        else
-            version="$(get_version "$program")"
+        elif ! version=$(get_version "$program") ; then
+			exit_err "check version failed for program '$program' (try with --no-version)"
         fi
-		end_log_line "program $(b "$program") found at $(b "$(wh "$program")") (version: $(b  "$version"))!"
+		end_log_line "found at $(b "$(wh "$program")") (version: $(b "$version"))!"
 	else
 		end_log_line_err "needed program $(b "$program") is nowhere to be found!"
 		end_log_line_err "Please try installing $(b "$program") via the following command, which may or may not work:"
@@ -237,18 +251,45 @@ req1() {
 	fi
 }
 
+_req(){
+	if [[ $REQ_CHECKED = 1 ]] ; then
+		exit_err "pre-boot script sanity checks already done, please define all requirements (i.e. all 'req' and/or 'req_no_ver' calls) before calling 'req_check'"
+	fi
+    programName=$1
+    noVer=$2
+	if [[ $REQ_INCLUDED = *" $programName:"* ]] ; then
+		local includedPart=${REQ_INCLUDED#*" $programName:"}
+		local includedValue=${includedPart%%" "*}
+		if [[ $includedValue != "$noVer" ]] ; then
+			exit_err "Found included value with noVer=$includedValue"
+		fi
+        log "Found req for program '$programName', noVer=$includedValue (already present)"
+	else 
+		REQ_INCLUDED="$REQ_INCLUDED $programName:$noVer"
+        log "Found req for program '$programName', noVer=$noVer"
+	fi
+}
+
 req() {
-    # FIXME use collect-then-check pattern
-	log "Performing pre-boot script sanity checks..."
-	for p in "$@"; do req1 "${p}" ; done
-	log "$(green "Script sanity checks completed successfully, current script $(b "$0") can start!")"
-	log
+	for p in "$@"; do _req "${p}" "0" ; done
 }
 
 req_no_ver() {
-    # FIXME use collect-then-check pattern
+	for p in "$@"; do _req "${p}" "1" ; done
+}
+
+req_check() {
+	export REQ_CHECKED=1
 	log "Performing pre-boot script sanity checks..."
-	for p in "$@"; do req1 "${p}" "--no-version"; done
+	for entry in $REQ_INCLUDED
+	do
+		local program=${entry%%:*}
+		local noVer=${entry##*:}
+		if [[ $noVer == 0 ]] ; then
+			req1 "$program"
+		else
+			req1 "$program" "--no-version"
+		fi
+	done
 	log "$(green "Script sanity checks completed successfully, current script $(b "$0") can start!")"
-	log
 }
