@@ -285,7 +285,7 @@ req_no_ver() {
 }
 
 req_check() {
-	export REQ_CHECKED=1
+	REQ_CHECKED=1
 	log "Performing pre-boot script sanity checks..."
 	for entry in $REQ_INCLUDED
 	do
