@@ -18,7 +18,7 @@ _initialize_asdf() {
 
 has_asdf() {
     if [ "$_ASDF_CHECKED" == "no" ]; then
-        if exists asdf; then
+        if [ -z "$_ASDF_DISABLED" ] && exists asdf; then
             _ASDF_CHECKED=found
             _initialize_asdf
             return 0
