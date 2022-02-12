@@ -129,7 +129,7 @@ _req1_with_asdf_inner() {
 		if ! _asdf_add_plugin "$pluginName" &>/dev/null; then
 			emit_log "$(yellow "failed"), "
 			if exists "$program"; then
-				end_log_line "using $(b "$(wh "$program")") (version: $(b "$(get_version "$program")"))"
+				end_log_line "using $(b "$(wh "$program")") (version: $(b "$(_get_version "$program")"))"
 				return 0
 			else
 				end_log_line_err "can't find $(b "$program")"
