@@ -30,9 +30,9 @@ get_version() {
 
 _get_version() {
 	local command_name="$1"
-	if commandOutput=$($command_name --version 2>&1) ; then
+	if commandOutput=$($command_name --version 2>/dev/null) ; then
 		:
-	elif commandOutput=$($command_name version 2>&1) ; then
+	elif commandOutput=$($command_name version 2>/dev/null) ; then
 		:
 	else
 		echo "get_version failed"
@@ -40,7 +40,7 @@ _get_version() {
 	fi
 	if [ -n "$commandOutput" ]; then
 		while IFS= read -r line; do
-			if [[ $line != "" ]] ; then
+			if [[ "$line" != "" ]] ; then
 				trim "$line"
 				break
 			fi
@@ -112,19 +112,21 @@ _describe_version() {
 _req1_with_asdf_inner_on_new_line() {
 	local program="$1"
     local versionPolicy="$2"
+    local package="$3"
 	local versionPolicyDescription="$(_describe_version "$versionPolicy")"
 	start_log_line "Ensuring $(ab "$program")$versionPolicyDescription via asdf"
-	_req1_with_asdf_inner "$program" "$versionPolicy"
+	_req1_with_asdf_inner "$program" "$versionPolicy" "$package"
 }
 
 _req1_with_asdf_inner() {
 	local program="$1"
     local versionPolicy="$2"
-	pluginName="$(_derive_asdf_plugin_name "$program")"
+    local package="$3"
+	pluginName="$(_derive_asdf_plugin_name "$program" "$package")"
 	emit_log "plugin $(ab "$pluginName"), "
 	if ! _asdf_has_plugin "$pluginName"; then
-		emit_log "installing it, "
-		if ! _asdf_add_plugin "$pluginName" 2>/dev/null; then
+		emit_log "installing, "
+		if ! _asdf_add_plugin "$pluginName" &>/dev/null; then
 			emit_log "$(yellow "failed"), "
 			if exists "$program"; then
 				end_log_line "using $(b "$(wh "$program")") (version: $(b "$(get_version "$program")"))"
@@ -135,13 +137,17 @@ _req1_with_asdf_inner() {
 			fi
 		fi
     fi
-	emit_log "searching version, "
+	emit_log "searching for version, "
 	local version="$(_asdf_find_latest "$pluginName" "$versionPolicy")"
+	if [ -z "$version" ]; then
+		end_log_line_err "can't find a suitable version!"
+		_req_giveup
+	fi
 	emit_log "found $(ab "$version"), "
 	if _asdf_version_is_installed "$pluginName" "$version"; then
 		:
 	else
-		emit_log "updating asdf, "
+		emit_log "updating, "
 		_asdf_update "$pluginName"
 		emit_log "installing version, "
 		if _asdf_install "$pluginName" "$version"; then
@@ -172,10 +178,11 @@ _is_shim() {
 _req1_with_asdf() {
 	local program="$1"
     local versionPolicy="$2"
+	local package="$3"
 	if [ "$versionPolicy" = "$_VERSION_NO_CHECK" ] || [ "$versionPolicy" = "$_VERSION_ANY" ]; then
 		start_log_line "Ensuring $(ab "$program")"
 		if _is_shim "$program"; then
-			emit_log "exists as shim, using $(b asdf), "
+			emit_log "$(i "it's a shim"), using $(b asdf), "
 			# Program not found, using asdf to install it (using latest version, since no version was specified)
 			_req1_with_asdf_inner "$program"
 		elif exists "$program" ; then
@@ -184,7 +191,7 @@ _req1_with_asdf() {
 			elif ! version=$(_get_version "$program") ; then
 				emit_log "not found, using $(b asdf), "
 				# Program not found, using asdf to install it (using latest version, since no version was specified)
-				if _req1_with_asdf_inner "$program"; then
+				if _req1_with_asdf_inner "$program" "" "$package"; then
 					return 0
 				else
 					return 1
@@ -194,22 +201,23 @@ _req1_with_asdf() {
 		else
 			emit_log "not found, using $(b asdf), "
 			# Program not found, using asdf to install it (using latest version, since no version was specified)
-			_req1_with_asdf_inner "$program"
+			_req1_with_asdf_inner "$program" "" "$package"
 		fi
 	elif [ "$versionPolicy" = "$_VERSION_ANY_VIA_ASDF_IF_AVAILABLE" ]; then
 		# Program not found, using asdf to install it (using latest version, since no version was specified)
-		_req1_with_asdf_inner_on_new_line "$program"
+		_req1_with_asdf_inner_on_new_line "$program" "" "$package"
 	else
 		# Search for latest version of program using asdf
-		_req1_with_asdf_inner_on_new_line "$program" "$versionPolicy"
+		_req1_with_asdf_inner_on_new_line "$program" "$versionPolicy" "$package"
 	fi
 }
 
 _req1() {
 	local program="$1"
     local versionPolicy="$2"
+    local package="$3"
 	if has_asdf; then
-		_req1_with_asdf "$program" "$versionPolicy"
+		_req1_with_asdf "$program" "$versionPolicy" "$package"
 	else
 		_req1_without_asdf "$program" "$versionPolicy"
 	fi
@@ -219,8 +227,9 @@ _req(){
 	if [[ $REQ_CHECKED = 1 ]] ; then
 		exit_err "pre-boot script sanity checks already done, please define all requirements (i.e. all $(b req), $(b req_no_ver), and $(b req_ver) calls) before calling $(b req_check)"
 	fi
-    programName=$1
-    versionPolicy=$2
+    programName="$1"
+    versionPolicy="$2"
+	package="$3"
 	if [[ $_REQ_INCLUDED = *" $programName:"* ]] ; then
 		local includedPart=${_REQ_INCLUDED#*" $programName:"}
 		local includedValue=${includedPart%%" "*}
@@ -229,8 +238,8 @@ _req(){
 		fi
         log "Found req for program '$programName', versionPolicy=$includedValue (already present)"
 	else
-		_REQ_INCLUDED="$_REQ_INCLUDED $programName:$versionPolicy"
-        log "Found req for program '$programName', versionPolicy=$versionPolicy"
+		_REQ_INCLUDED="$_REQ_INCLUDED $programName:$versionPolicy:$package"
+        log "Found req for program '$programName', versionPolicy=$versionPolicy, package=$package"
 	fi
 }
 
@@ -254,7 +263,8 @@ req_ver() {
 	# - with asdf: try to install its latest matching version using asdf, otherwise fail
 	local program="$1"
 	local versionSpec="${2:-$_VERSION_ANY_VIA_ASDF_IF_AVAILABLE}"
-	_req "$program" "$versionSpec"
+	local package="${3}"
+	_req "$program" "$versionSpec" "$package"
 }
 
 req_check() {
@@ -263,8 +273,10 @@ req_check() {
 	for entry in $_REQ_INCLUDED
 	do
 		local program=${entry%%:*}
-		local versionPolicy=${entry##*:}
-		_req1 "$program" "$versionPolicy"
+		local secondPart=${entry#*:}
+		local versionPolicy=${secondPart%%:*}
+		local package=${secondPart##*:}
+		_req1 "$program" "$versionPolicy" "$package"
 	done
 	log "$(green "Script sanity checks completed successfully, current script $(b "$0") can start!")"
 }
