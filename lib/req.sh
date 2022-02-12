@@ -236,10 +236,14 @@ _req(){
 		if [[ $includedValue != "$versionPolicy" ]] ; then
 			exit_err "Found included value with versionPolicy=$includedValue"
 		fi
-        log "Found req for program '$programName', versionPolicy=$includedValue (already present)"
+		if [ -n "$_REQ_VERBOSE" ] ; then
+	    	log "Found req for program '$programName', versionPolicy=$includedValue (already present)"
+		fi
 	else
 		_REQ_INCLUDED="$_REQ_INCLUDED $programName:$versionPolicy:$package"
-        log "Found req for program '$programName', versionPolicy=$versionPolicy, package=$package"
+		if [ -n "$_REQ_VERBOSE" ] ; then
+	    	log "Found req for program '$programName', versionPolicy=$versionPolicy, package=$package"
+		fi
 	fi
 }
 
