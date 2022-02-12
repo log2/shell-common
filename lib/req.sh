@@ -82,16 +82,21 @@ _req1_without_asdf() {
 	local program="$1"
     local versionPolicy="$2"
 	start_log_line "Ensuring $(ab "$program")"
-	if exists "$program" ; then
-        if [ "$versionPolicy" = "$_VERSION_NO_CHECK" ] ; then
-            version="n/a"
-        elif ! version=$(get_version "$program") ; then
-			exit_err "can't get version of $(b "$program") (try with $(b "req_no_ver"))"
-        fi
-		end_log_line "found at $(b "$(wh "$program")") (version: $(b "$version"))!"
+	if [ "$versionPolicy" = "$_VERSION_NO_CHECK" ] || [ "$versionPolicy" = "$_VERSION_ANY" ]; then
+		if exists "$program" ; then
+			if [ "$versionPolicy" = "$_VERSION_NO_CHECK" ] ; then
+				version="n/a"
+			elif ! version=$(get_version "$program") ; then
+				exit_err "can't get version of $(b "$program") (try with $(b "req_no_ver"))"
+			fi
+			end_log_line "found at $(b "$(wh "$program")") (version: $(b "$version"))!"
+		else
+			end_log_line_err "can't find $(b "$program"). Also, $(b "asdf") is not available."
+			_suggest_and_exit "$program"
+		fi
 	else
-		end_log_line_err "can't find $(b "$program"). Also, $(b "asdf") is not available."
-		_suggest_and_exit "$program"
+		end_log_line "failed"
+		whine "Version check is not supported without asdf"
 	fi
 }
 
@@ -120,7 +125,7 @@ _req1_with_asdf_inner() {
 	if ! _asdf_has_plugin "$pluginName"; then
 		emit_log "installing it, "
 		if ! _asdf_add_plugin "$pluginName" 2>/dev/null; then
-			emit_log "$(yellow failed), "
+			emit_log "$(yellow "failed"), "
 			if exists "$program"; then
 				end_log_line "using $(b "$(wh "$program")") (version: $(b "$(get_version "$program")"))"
 				return 0
@@ -155,12 +160,25 @@ _req1_with_asdf_inner() {
 	fi
 }
 
+_is_shim() {
+	local program="$1"
+	if exists "$program" && [[ "$(wh "$program")" == $HOME/.asdf/shims/* ]]; then
+		return 0
+	else
+		return 1
+	fi
+}
+
 _req1_with_asdf() {
 	local program="$1"
     local versionPolicy="$2"
 	if [ "$versionPolicy" = "$_VERSION_NO_CHECK" ] || [ "$versionPolicy" = "$_VERSION_ANY" ]; then
 		start_log_line "Ensuring $(ab "$program")"
-		if exists "$program" ; then
+		if _is_shim "$program"; then
+			emit_log "exists as shim, using $(b asdf), "
+			# Program not found, using asdf to install it (using latest version, since no version was specified)
+			_req1_with_asdf_inner "$program"
+		elif exists "$program" ; then
 			if [ "$versionPolicy" = "$_VERSION_NO_CHECK" ] ; then
 				version="n/a"
 			elif ! version=$(_get_version "$program") ; then
@@ -217,14 +235,23 @@ _req(){
 }
 
 req() {
+	# Behaviour:
+	# - without asdf: if program is already installed, use it and print version if available, otherwise fail
+	# - without asdf: if program is already installed, use it, otherwise try to install its latest version using asdf
 	for p in "$@"; do _req "${p}" "$_VERSION_ANY" ; done
 }
 
 req_no_ver() {
+	# Behaviour:
+	# - without asdf: if program is already installed, use it (without calling it to get the version), otherwise fail
+	# - with asdf: if program is already installed, use it (without calling it to get the version), otherwise try to install its latest version using asdf
 	for p in "$@"; do _req "${p}" "$_VERSION_NO_CHECK" ; done
 }
 
 req_ver() {
+	# Behaviour:
+	# - without asdf: fail
+	# - with asdf: try to install its latest matching version using asdf, otherwise fail
 	local program="$1"
 	local versionSpec="${2:-$_VERSION_ANY_VIA_ASDF_IF_AVAILABLE}"
 	_req "$program" "$versionSpec"
