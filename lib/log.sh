@@ -94,13 +94,13 @@ start_log_line() {
 
 end_log_line() {
 	local message=("$@")
-	end_log_line_with_color green "${message[@]}"
+	end_log_line_with_color vanilla "${message[@]}"
 }
 
 end_log_line_with_color() {
 	local color="$1"
 	local message=("${@:2}")
-	if istty ; then
+	if istty && [ -n "$color" ] && [ "$color" != "vanilla" ]; then
 		emit_log_line "$("$color" "$(b "${message[@]}")")"
 	else
 		emit_log_line "${message[@]}"
