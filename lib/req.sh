@@ -87,7 +87,7 @@ _req1_without_asdf() {
 			elif ! version=$(get_version "$program") ; then
 				exit_err "can't get version of $(ab "$program") (try with $(b "req_no_ver"))"
 			fi
-			end_log_line "found at $(_describe_program_and_versionm "$program" "$version")!"
+			end_log_line "found at $(_describe_program_and_versionm "$program" "$version")."
 		else
 			end_log_line_err "can't find $(ab "$program"). Also, $(b "asdf") is not available."
 			_suggest_and_exit "$program"
@@ -159,7 +159,7 @@ _req1_with_asdf_inner() {
     fi
 	emit_log "setting shell, "
 	if _asdf_set_shell_version "$pluginName" "$version"; then
-		end_log_line "done!"
+		end_log_line "done."
 	else
 		end_log_line_err "failed!"
 		_req_giveup
@@ -182,7 +182,7 @@ _req1_with_asdf() {
 	if [ "$versionPolicy" = "$_VERSION_NO_CHECK" ] || [ "$versionPolicy" = "$_VERSION_ANY" ]; then
 		start_log_line "Checking $(ab "$program")"
 		if _is_shim "$program"; then
-			emit_log "$(i "it's a shim"), using $(b asdf), "
+			emit_log "it's a shim, using $(b asdf), "
 			# Program not found, using asdf to install it (using latest version, since no version was specified)
 			_req1_with_asdf_inner "$program"
 		elif exists "$program" ; then
@@ -197,7 +197,7 @@ _req1_with_asdf() {
 					return 1
 				fi
 			fi
-			end_log_line "found at $(_describe_program_and_versionm "$program" "$version") !"
+			end_log_line "found at $(_describe_program_and_versionm "$program" "$version")."
 		else
 			emit_log "not found, using $(b asdf), "
 			# Program not found, using asdf to install it (using latest version, since no version was specified)
@@ -282,5 +282,5 @@ req_check() {
 		local package=${secondPart##*:}
 		_req1 "$program" "$versionPolicy" "$package"
 	done
-	log "$(green "Script sanity checks completed successfully, current script $(ab "$0") can start!")"
+	log "$(green "Script sanity checks completed successfully, current script $(ab "$0") can start.")"
 }
