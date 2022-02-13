@@ -2,7 +2,7 @@
 
 load test_helper
 
-include calc
+include log2/shell-common lib/calc.sh
 
 @test "fp division works" {
     run compute 2 / 3

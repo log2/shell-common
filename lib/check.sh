@@ -2,8 +2,10 @@
 
 if type dep &>/dev/null ; then
     dep include log2/shell-common log
+    dep include log2/shell-common req
 else
     include log2/shell-common lib/log.sh
+    include log2/shell-common lib/req.sh
 fi
 
 req shellcheck
