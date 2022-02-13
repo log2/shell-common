@@ -82,7 +82,7 @@ prepare_styling() {
 			ansi 9 "${message[@]}"
 		}
 	else
-		echo "Text styling disabled (_DISABLE_STYLING = "$_DISABLE_STYLING", tput = $( exists tput && echo "found" || echo "not found" ))"
+		echo "Text styling disabled (_DISABLE_STYLING = $_DISABLE_STYLING, tput = $( exists tput && echo "found" || echo "not found" ))"
 		alias red=vanilla
 		alias green=vanilla
 		alias yellow=vanilla
