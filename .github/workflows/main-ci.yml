@@ -12,7 +12,7 @@ on:
 jobs:
   build-ubuntu:
     # The type of runner that the job will run on
-    runs-on: ubuntu-latest 
+    runs-on: ubuntu-latest
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -23,24 +23,24 @@ jobs:
       uses: snickerbockers/submodules-init@v4
 
     - name: Setup BATS testing framework
-      uses: mig4/setup-bats@v1.0.1
+      uses: mig4/setup-bats@v1.2.0
       with:
         # The BATS version to setup. Example: 1.0.0 or master, default: 1.1.0
-        bats-version: 1.1.0
+        bats-version: 1.5.0
 
     # Run Shellcheck
     - name: Run ShellCheck
       uses: ludeeus/action-shellcheck@master
       with:
         ignore: vendor stub package.sh
-        
+
     # Runs BATS tests
     - name: Run BATS tests
       run: BASHER_ROOT=${GITHUB_WORKSPACE}/stub/basher BASHER_PREFIX=${GITHUB_WORKSPACE}/stub TERM=xterm bats tests
 
   build-macos:
     # The type of runner that the job will run on
-    runs-on: macos-latest 
+    runs-on: macos-latest
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -51,11 +51,11 @@ jobs:
       uses: snickerbockers/submodules-init@v4
 
     - name: Setup BATS testing framework
-      uses: mig4/setup-bats@v1.0.1
+      uses: mig4/setup-bats@v1.2.0
       with:
         # The BATS version to setup. Example: 1.0.0 or master, default: 1.1.0
-        bats-version: 1.1.0
-        
+        bats-version: 1.5.0
+
     # Runs BATS tests
     - name: Run BATS tests
       run: BASHER_ROOT=${GITHUB_WORKSPACE}/stub/basher BASHER_PREFIX=${GITHUB_WORKSPACE}/stub TERM=xterm bats tests
