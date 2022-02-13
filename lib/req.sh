@@ -10,16 +10,6 @@ else
     include log2/shell-common lib/asdf.sh
 fi
 
-get_version() {
-	local command_name="$1"
-	local result
-	if ! result="$(_get_version "$command_name")"; then
-		exit_err "$result"
-	else
-		echo "$result"
-	fi
-}
-
 _get_version() {
 	local command_name="$1"
 	if commandOutput=$($command_name --version 2>/dev/null) ; then
@@ -40,6 +30,16 @@ _get_version() {
 	else
 		echo "get_version has no output"
 		return 1
+	fi
+}
+
+get_version() {
+	local command_name="$1"
+	local result
+	if ! result="$(_get_version "$command_name")"; then
+		exit_err "$result"
+	else
+		echo "$result"
 	fi
 }
 
