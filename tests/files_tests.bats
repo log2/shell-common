@@ -4,7 +4,7 @@ load test_helper
 
 load vendor/shellmock/shellmock
 
-include files
+include log2/shell-common lib/files.sh
 
 setup()
 {
