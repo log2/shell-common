@@ -6,12 +6,18 @@ else
     include log2/shell-common lib/exist.sh
 fi
 
+vanilla() {
+	local message=("$@")
+	echo "${message[@]}"
+}
+
 prepare_styling() {
-	if exists tput ; then
+	if exists tput && [ -z "$_DISABLE_STYLING" ]; then
 		STYLE_BOLD="$(tput bold)"
 		STYLE_OFF="$(tput sgr0)"
 		COLOR_NORMAL="$(tput setaf 7)"
-		# COLOR_BLACK="$(tput setaf 0)"
+		COLOR_WHITE="$COLOR_NORMAL"
+		COLOR_BLACK="$(tput setaf 0)"
 		COLOR_RED="$(tput setaf 1)"
 		COLOR_GREEN="$(tput setaf 2)"
 		COLOR_YELLOW="$(tput setaf 3)"
@@ -49,6 +55,14 @@ prepare_styling() {
 			local message=("$@")
 			wrap_color "$COLOR_BLUE" "${message[@]}"
 		}
+		black() {
+			local message=("$@")
+			wrap_color "$COLOR_BLACK" "${message[@]}"
+		}
+		white() {
+			local message=("$@")
+			wrap_color "$COLOR_WHITE" "${message[@]}"
+		}
 
 		ansi() {
 			local ansi_code="$1"
@@ -68,22 +82,38 @@ prepare_styling() {
 			ansi 9 "${message[@]}"
 		}
 	else
-		logtty "Program tput not found, text styling will be disabled"
-		vanilla() {
-			local message=("$@")
-			echo "${message[@]}"
-		}
-		alias b=vanilla
+		echo "Text styling disabled (_DISABLE_STYLING = "$_DISABLE_STYLING", tput = $( exists tput && echo "found" || echo "not found" ))"
 		alias red=vanilla
 		alias green=vanilla
 		alias yellow=vanilla
 		alias blue=vanilla
+		alias white=vanilla
+		alias black=vanilla
+		alias b=vanilla
+		alias i=vanilla
+		alias st=vanilla
+		ansi() {
+			local ansi_code="$1"
+			local message=("${@:2}")
+			printf "%b" "${message[*]}"
+		}
 	fi
 }
 
 prepare_styling
 
+accent() {
+	local message=("$@")
+	a "${message[@]}"
+}
+
+a() {
+	local message=("$@")
+	"${_ACCENT_COLOR:-green}" "${message[@]}"
+}
+
 ab() {
     # Accent + bold
-    green "$(b "$*")"
+	local message=("$@")
+    a "$(b "${message[@]}")"
 }
