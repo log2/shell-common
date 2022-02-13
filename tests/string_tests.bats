@@ -4,7 +4,7 @@ load test_helper
 
 TAB=$(printf "%b" "\t")
 
-include strings
+include log2/shell-common lib/strings.sh
 
 @test "strip_prefix works with spaces" {
     run strip_prefix "a b/" "a b/c"

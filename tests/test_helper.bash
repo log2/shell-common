@@ -35,14 +35,26 @@ teardown() {
 }
 
 lib() {
-    local libname="$1"
-    echo "${COMMON_ROOT}/lib/$libname.sh"
+  local libname="$1"
+  common_file "lib/$libname.sh"
+}
+
+common_file() {
+  local filename="$1"
+  echo "${COMMON_ROOT}/$filename"
 }
 
 include() {
-    local libname="$1"
+  local package="$1"
+  local filename="$2"
+  local expectedPackage="log2/shell-common"
+  if [ "$package" == "$expectedPackage" ]; then
     # shellcheck disable=SC1090
-    source "$(lib "$libname")"
+    source "$(common_file "$filename")"
+  else
+    echo "include from $package (different from expected $expectedPackage) is not supported, can't include $filename"
+    exit 1
+  fi
 }
 
 # load lib/mocks
