@@ -2,19 +2,11 @@
 
 if type dep &>/dev/null ; then
     dep include log2/shell-common exist
-else
-    include log2/shell-common lib/exist.sh
-fi
-
-if type dep &>/dev/null ; then
     dep include log2/shell-common log
-else
-    include log2/shell-common lib/log.sh
-fi
-
-if type dep &>/dev/null ; then
     dep include log2/shell-common asdf
 else
+    include log2/shell-common lib/exist.sh
+    include log2/shell-common lib/log.sh
     include log2/shell-common lib/asdf.sh
 fi
 
