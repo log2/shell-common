@@ -119,7 +119,8 @@ _req1_with_asdf_inner_on_new_line() {
 	local program="$1"
     local versionPolicy="$2"
     local package="$3"
-	local versionPolicyDescription="$(_describe_version "$versionPolicy")"
+	local versionPolicyDescription
+	versionPolicyDescription="$(_describe_version "$versionPolicy")"
 	start_log_line "Checking $(ab "$program")$versionPolicyDescription via asdf"
 	_req1_with_asdf_inner "$program" "$versionPolicy" "$package"
 }
@@ -144,7 +145,8 @@ _req1_with_asdf_inner() {
 		fi
     fi
 	emit_log "searching for version, "
-	local version="$(_asdf_find_latest "$pluginName" "$versionPolicy")"
+	local version
+	version="$(_asdf_find_latest "$pluginName" "$versionPolicy")"
 	if [ -z "$version" ]; then
 		end_log_line_err "can't find a suitable version!"
 		_req_giveup
