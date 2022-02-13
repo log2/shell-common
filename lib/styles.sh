@@ -82,16 +82,47 @@ prepare_styling() {
 			ansi 9 "${message[@]}"
 		}
 	else
-		echo "Text styling disabled (_DISABLE_STYLING = $_DISABLE_STYLING, tput = $( exists tput && echo "found" || echo "not found" ))"
-		alias red=vanilla
-		alias green=vanilla
-		alias yellow=vanilla
-		alias blue=vanilla
-		alias white=vanilla
-		alias black=vanilla
-		alias b=vanilla
-		alias i=vanilla
-		alias st=vanilla
+		echo "Text styling disabled (_DISABLE_STYLING = $_DISABLE_STYLING, tput is $( exists tput && echo "" || echo "not " )available)"
+		red() {
+			local message=("$@")
+			vanilla "${message[@]}"
+		}
+		green() {
+			local message=("$@")
+			vanilla "${message[@]}"
+		}
+		yellow() {
+			local message=("$@")
+			vanilla "${message[@]}"
+		}
+		blue() {
+			local message=("$@")
+			vanilla "${message[@]}"
+		}
+		white() {
+			local message=("$@")
+			vanilla "${message[@]}"
+		}
+		black() {
+			local message=("$@")
+			vanilla "${message[@]}"
+		}
+		b() {
+			local message=("$@")
+			vanilla "${message[@]}"
+		}
+		i() {
+			local message=("$@")
+			vanilla "${message[@]}"
+		}
+		u() {
+			local message=("$@")
+			vanilla "${message[@]}"
+		}
+		st() {
+			local message=("$@")
+			vanilla "${message[@]}"
+		}
 		ansi() {
 			local ansi_code="$1"
 			local message=("${@:2}")
