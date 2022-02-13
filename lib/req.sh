@@ -78,20 +78,26 @@ _suggest_and_exit() {
 	_req_giveup
 }
 
+_describe_program_and_versionm() {
+	local program="$1"
+	local version="$2"
+	echo "$(ab "$(wh "$program")") (version: $(ab "$version"))"
+}
+
 _req1_without_asdf() {
 	local program="$1"
     local versionPolicy="$2"
-	start_log_line "Ensuring $(ab "$program")"
+	start_log_line "Checking $(ab "$program")"
 	if [ "$versionPolicy" = "$_VERSION_NO_CHECK" ] || [ "$versionPolicy" = "$_VERSION_ANY" ]; then
 		if exists "$program" ; then
 			if [ "$versionPolicy" = "$_VERSION_NO_CHECK" ] ; then
 				version="n/a"
 			elif ! version=$(get_version "$program") ; then
-				exit_err "can't get version of $(b "$program") (try with $(b "req_no_ver"))"
+				exit_err "can't get version of $(ab "$program") (try with $(b "req_no_ver"))"
 			fi
-			end_log_line "found at $(b "$(wh "$program")") (version: $(b "$version"))!"
+			end_log_line "found at $(_describe_program_and_versionm "$program" "$version")!"
 		else
-			end_log_line_err "can't find $(b "$program"). Also, $(b "asdf") is not available."
+			end_log_line_err "can't find $(ab "$program"). Also, $(b "asdf") is not available."
 			_suggest_and_exit "$program"
 		fi
 	else
@@ -114,7 +120,7 @@ _req1_with_asdf_inner_on_new_line() {
     local versionPolicy="$2"
     local package="$3"
 	local versionPolicyDescription="$(_describe_version "$versionPolicy")"
-	start_log_line "Ensuring $(ab "$program")$versionPolicyDescription via asdf"
+	start_log_line "Checking $(ab "$program")$versionPolicyDescription via asdf"
 	_req1_with_asdf_inner "$program" "$versionPolicy" "$package"
 }
 
@@ -129,10 +135,10 @@ _req1_with_asdf_inner() {
 		if ! _asdf_add_plugin "$pluginName" &>/dev/null; then
 			emit_log "$(yellow "failed"), "
 			if exists "$program"; then
-				end_log_line "using $(b "$(wh "$program")") (version: $(b "$(_get_version "$program")"))"
+				end_log_line "using $(_describe_program_and_versionm "$program" "$(_get_version "$program")")"
 				return 0
 			else
-				end_log_line_err "can't find $(b "$program")"
+				end_log_line_err "can't find $(ab "$program")"
 				_suggest_and_exit "$program"
 			fi
 		fi
@@ -180,7 +186,7 @@ _req1_with_asdf() {
     local versionPolicy="$2"
 	local package="$3"
 	if [ "$versionPolicy" = "$_VERSION_NO_CHECK" ] || [ "$versionPolicy" = "$_VERSION_ANY" ]; then
-		start_log_line "Ensuring $(ab "$program")"
+		start_log_line "Checking $(ab "$program")"
 		if _is_shim "$program"; then
 			emit_log "$(i "it's a shim"), using $(b asdf), "
 			# Program not found, using asdf to install it (using latest version, since no version was specified)
@@ -197,7 +203,7 @@ _req1_with_asdf() {
 					return 1
 				fi
 			fi
-			end_log_line "found at $(b "$(wh "$program")") (version: $(b "$version"))!"
+			end_log_line "found at $(_describe_program_and_versionm "$program" "$version") !"
 		else
 			emit_log "not found, using $(b asdf), "
 			# Program not found, using asdf to install it (using latest version, since no version was specified)
@@ -282,5 +288,5 @@ req_check() {
 		local package=${secondPart##*:}
 		_req1 "$program" "$versionPolicy" "$package"
 	done
-	log "$(green "Script sanity checks completed successfully, current script $(b "$0") can start!")"
+	log "$(green "Script sanity checks completed successfully, current script $(ab "$0") can start!")"
 }
