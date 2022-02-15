@@ -84,21 +84,19 @@ _req1_without_asdf() {
 	local program="$1"
     local versionPolicy="$2"
 	start_log_line "Checking $(ab "$program")"
-	if [ "$versionPolicy" = "$_VERSION_NO_CHECK" ] || [ "$versionPolicy" = "$_VERSION_ANY" ]; then
-		if exists "$program" ; then
-			if [ "$versionPolicy" = "$_VERSION_NO_CHECK" ] ; then
-				version="n/a"
-			elif ! version=$(_get_version "$program") ; then
-				exit_err "can't get version of $(ab "$program") (use $(b "req_no_ver") to disable this check)"
-			fi
-			end_log_line "found at $(_describe_program_and_versionm "$program" "$version")."
-		else
-			end_log_line_err "can't find $(ab "$program"). Also, $(_asdf) is not available."
-			_suggest_and_exit "$program"
+	if [ "$versionPolicy" != "$_VERSION_NO_CHECK" ] && [ "$versionPolicy" != "$_VERSION_ANY" ]; then
+		emit_log "no $(_asdf) (though required), just checking existence, "
+	fi
+	if exists "$program" ; then
+		if [ "$versionPolicy" = "$_VERSION_NO_CHECK" ] ; then
+			version="n/a"
+		elif ! version=$(_get_version "$program") ; then
+			exit_err "can't get version of $(ab "$program") - $(ab "$version") (use $(b "req_no_ver") to disable this check)"
 		fi
+		end_log_line "found at $(_describe_program_and_versionm "$program" "$version")."
 	else
-		end_log_line "failed"
-		whine "Version check is not supported without $(_asdf)"
+		end_log_line_err "can't find $(ab "$program"). Also, $(_asdf) is not available."
+		_suggest_and_exit "$program"
 	fi
 }
 
@@ -269,7 +267,7 @@ req_no_ver() {
 
 req_ver() {
 	# Behaviour:
-	# - without asdf: fail
+	# - without asdf: same as req (but with a warning) if program is already installed, otherwise fail
 	# - with asdf: try to install its latest matching version using asdf, otherwise fail
 	local program="$1"
 	local versionSpec="${2:-$_VERSION_ANY_VIA_ASDF_IF_AVAILABLE}"
