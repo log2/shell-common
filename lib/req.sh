@@ -277,9 +277,23 @@ req_ver() {
 	_req "$program" "$versionSpec" "$package"
 }
 
+_describe_asdf_status() {
+	if has_asdf ; then
+		echo "$(_asdf) useable (use $(ab "_ASDF_DISABLED=y") to disable)"
+	else
+		if could_use_asdf; then
+			echo -n "$(_asdf) detected but $(b disabled) via $(ab "_ASDF_DISABLED=$_ASDF_DISABLED")"
+		else
+			echo -n "$(_asdf) not detected"
+		fi
+		echo ", using existence check only"
+	fi
+}
+
 req_check() {
 	REQ_CHECKED=1
-	log "Performing pre-boot script sanity checks..."
+
+	log "Performing pre-boot script sanity checks [$(_describe_asdf_status)] ..."
 	for entry in $_REQ_INCLUDED
 	do
 		local program=${entry%%:*}
