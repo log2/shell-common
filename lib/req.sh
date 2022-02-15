@@ -76,6 +76,10 @@ _describe_program_and_versionm() {
 	echo "$(ab "$(wh "$program")") (version: $(ab "$version"))"
 }
 
+_asdf() {
+	b asdf
+}
+
 _req1_without_asdf() {
 	local program="$1"
     local versionPolicy="$2"
@@ -84,17 +88,17 @@ _req1_without_asdf() {
 		if exists "$program" ; then
 			if [ "$versionPolicy" = "$_VERSION_NO_CHECK" ] ; then
 				version="n/a"
-			elif ! version=$(get_version "$program") ; then
-				exit_err "can't get version of $(ab "$program") (try with $(b "req_no_ver"))"
+			elif ! version=$(_get_version "$program") ; then
+				exit_err "can't get version of $(ab "$program") (use $(b "req_no_ver") to disable this check)"
 			fi
 			end_log_line "found at $(_describe_program_and_versionm "$program" "$version")."
 		else
-			end_log_line_err "can't find $(ab "$program"). Also, $(b "asdf") is not available."
+			end_log_line_err "can't find $(ab "$program"). Also, $(_asdf) is not available."
 			_suggest_and_exit "$program"
 		fi
 	else
 		end_log_line "failed"
-		whine "Version check is not supported without asdf"
+		whine "Version check is not supported without $(_asdf)"
 	fi
 }
 
@@ -113,7 +117,7 @@ _req1_with_asdf_inner_on_new_line() {
     local package="$3"
 	local versionPolicyDescription
 	versionPolicyDescription="$(_describe_version "$versionPolicy")"
-	start_log_line "Checking $(ab "$program")$versionPolicyDescription via asdf"
+	start_log_line "Checking $(ab "$program")$versionPolicyDescription via $(_asdf)"
 	_req1_with_asdf_inner "$program" "$versionPolicy" "$package"
 }
 
@@ -182,14 +186,14 @@ _req1_with_asdf() {
 	if [ "$versionPolicy" = "$_VERSION_NO_CHECK" ] || [ "$versionPolicy" = "$_VERSION_ANY" ]; then
 		start_log_line "Checking $(ab "$program")"
 		if _is_shim "$program"; then
-			emit_log "it's a shim, using $(b asdf), "
+			emit_log "it's a shim, using $(_asdf), "
 			# Program not found, using asdf to install it (using latest version, since no version was specified)
 			_req1_with_asdf_inner "$program"
 		elif exists "$program" ; then
 			if [ "$versionPolicy" = "$_VERSION_NO_CHECK" ] ; then
 				version="n/a"
 			elif ! version=$(_get_version "$program") ; then
-				emit_log "not found, using $(b asdf), "
+				emit_log "not found, using $(_asdf), "
 				# Program not found, using asdf to install it (using latest version, since no version was specified)
 				if _req1_with_asdf_inner "$program" "" "$package"; then
 					return 0
@@ -199,7 +203,7 @@ _req1_with_asdf() {
 			fi
 			end_log_line "found at $(_describe_program_and_versionm "$program" "$version")."
 		else
-			emit_log "not found, using $(b asdf), "
+			emit_log "not found, using $(_asdf), "
 			# Program not found, using asdf to install it (using latest version, since no version was specified)
 			_req1_with_asdf_inner "$program" "" "$package"
 		fi
