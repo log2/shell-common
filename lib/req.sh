@@ -237,7 +237,7 @@ _req(){
 	if [[ $_REQ_INCLUDED = *" $programName:"* ]] ; then
 		local includedPart=${_REQ_INCLUDED#*" $programName:"}
 		local includedValue=${includedPart%%" "*}
-		if [[ $includedValue != "$versionPolicy" ]] ; then
+		if [[ $includedValue != "$versionPolicy:$package" ]] ; then
 			exit_err "Found included value with versionPolicy=$includedValue"
 		fi
 		if [ -n "$_REQ_VERBOSE" ] ; then
