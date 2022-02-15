@@ -238,15 +238,17 @@ _req(){
 		local includedPart=${_REQ_INCLUDED#*" $programName:"}
 		local includedValue=${includedPart%%" "*}
 		if [[ $includedValue != "$versionPolicy:$package" ]] ; then
-			exit_err "Found included value with versionPolicy=$includedValue"
+			local existingVersionPolicy=${includedValue%%:*}
+			local existingPackage=${includedValue##*:}
+			exit_err "Found existing, but conflicting, requirement for program $(ab "$programName"), versionPolicy=$(ab "$existingVersionPolicy") (instead of $(ab "$versionPolicy")), package=$existingPackage (instead of $(ab "$package")). Cannot continue, please fix your requirements."
 		fi
 		if [ -n "$_REQ_VERBOSE" ] ; then
-	    	log "Found req for program '$programName', versionPolicy=$includedValue (already present)"
+	    	log "Found req for program $(ab "$programName"), versionPolicy=$(ab "$versionPolicy"), package=$(ab "$package") (already present)"
 		fi
 	else
 		_REQ_INCLUDED="$_REQ_INCLUDED $programName:$versionPolicy:$package"
 		if [ -n "$_REQ_VERBOSE" ] ; then
-	    	log "Found req for program '$programName', versionPolicy=$versionPolicy, package=$package"
+	    	log "Found req for program $(ab "$programName"), versionPolicy=$(ab "$versionPolicy"), package=$(ab "$package")"
 		fi
 	fi
 }
