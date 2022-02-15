@@ -16,9 +16,13 @@ _initialize_asdf() {
     fi
 }
 
+could_use_asdf() {
+    exists asdf && exists grep && exists xargs && exists tr && exists tail && exists sort
+}
+
 has_asdf() {
     if [ "$_ASDF_CHECKED" == "no" ]; then
-        if [ -z "$_ASDF_DISABLED" ] && exists asdf; then
+        if [ -z "$_ASDF_DISABLED" ] && could_use_asdf; then
             _ASDF_CHECKED=found
             _initialize_asdf
             return 0
