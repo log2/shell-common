@@ -82,7 +82,7 @@ prepare_styling() {
 			ansi 9 "${message[@]}"
 		}
 	else
-		echo "Text styling disabled (_DISABLE_STYLING = $_DISABLE_STYLING, tput is $( exists tput && echo "" || echo "not " )available)"
+		[ -z "$_SILENT_STYLING_SETUP" ] && echo "Text styling disabled (_DISABLE_STYLING = $_DISABLE_STYLING, tput is $( exists tput && echo "" || echo "not " )available)"
 		red() {
 			local message=("$@")
 			vanilla "${message[@]}"
