@@ -4,10 +4,12 @@ if type dep &>/dev/null ; then
     dep include log2/shell-common exist
     dep include log2/shell-common log
     dep include log2/shell-common asdf
+    dep include log2/shell-common strings
 else
     include log2/shell-common lib/exist.sh
     include log2/shell-common lib/log.sh
     include log2/shell-common lib/asdf.sh
+    include log2/shell-common lib/strings.sh
 fi
 
 _get_version() {
@@ -230,6 +232,59 @@ _req1() {
 	fi
 }
 
+_log_if_verbose() {
+	local message=("$@")
+	if [ -n "$_REQ_VERBOSE" ] ; then
+		log "${message[@]}"
+	fi
+}
+
+_compatible_version_policies() {
+	local firstPolicy="$1"
+	local secondPolicy="$2"
+	_strictier_policy "$firstPolicy" "$secondPolicy" || _strictier_policy "$secondPolicy" "$firstPolicy"
+}
+
+_strictier_policy() {
+	local firstPolicy="$1"
+	local secondPolicy="$2"
+	if _is_catch_all "$secondPolicy" ; then
+		return 0
+	else
+		begins_with "$firstPolicy" "$secondPolicy"
+	fi
+}
+
+_is_catch_all() {
+	local policy="$1"
+	if [ "$policy" = "$_VERSION_ANY" ] || [ "$policy" = "$_VERSION_ANY_VIA_ASDF_IF_AVAILABLE" ] || [ "$policy" = "$_VERSION_NO_CHECK" ] ; then
+		return 0
+	else
+		return 1
+	fi
+}
+
+_is_catch_all_package() {
+	local package="$1"
+	test -z "$package"
+}
+
+_strictier_package() {
+	local firstPackage="$1"
+	local secondPackage="$2"
+	_is_catch_all_package "$secondPackage" || [ "$firstPackage" = "$secondPackage" ]
+}
+
+_compatible_packages() {
+	local firstPackage="$1"
+	local secondPackage="$2"
+	if _strictier_package "$firstPackage" "$secondPackage" || _strictier_package "$secondPackage" "$firstPackage" ; then
+		return 0
+	else
+		return 1
+	fi
+}
+
 _req(){
 	if [[ $REQ_CHECKED = 1 ]] ; then
 		exit_err "pre-boot script sanity checks already done, please define all requirements (i.e. all $(b req), $(b req_no_ver), and $(b req_ver) calls) before calling $(b req_check)"
@@ -243,16 +298,24 @@ _req(){
 		if [[ $includedValue != "$versionPolicy:$package" ]] ; then
 			local existingVersionPolicy=${includedValue%%:*}
 			local existingPackage=${includedValue##*:}
-			exit_err "Found existing, but conflicting, requirement for program $(ab "$programName"), versionPolicy=$(ab "$existingVersionPolicy") (instead of $(ab "$versionPolicy")), package=$existingPackage (instead of $(ab "$package")). Cannot continue, please fix your requirements."
-		fi
-		if [ -n "$_REQ_VERBOSE" ] ; then
-	    	log "Found req for program $(ab "$programName"), versionPolicy=$(ab "$versionPolicy"), package=$(ab "$package") (already present)"
+			if _compatible_packages "$existingPackage" "$package" && _compatible_version_policies "$existingVersionPolicy" "$versionPolicy" ; then
+				if _strictier_policy "$existingVersionPolicy" "$versionPolicy" && _strictier_package "$existingPackage" "$package" ; then
+					# No change
+					_log_if_verbose "Found req for program $(ab "$programName"), versionPolicy=$(ab "$versionPolicy") (broader than current $(ab "$existingVersionPolicy")), package=$(ab "$package") (no change)"
+				else
+					_REQ_INCLUDED="${_REQ_INCLUDED//$programName:$existingVersionPolicy:$existingPackage/}"
+					_REQ_INCLUDED="$_REQ_INCLUDED $programName:$versionPolicy:$package"
+					_log_if_verbose "Found req for program $(ab "$programName"), versionPolicy=$(ab "$versionPolicy") (narrower than current $(ab "$existingVersionPolicy")), package=$(ab "$package") (narrowed version policy as requested)"
+				fi
+			else
+				exit_err "Found existing, but conflicting, requirement for program $(ab "$programName"), versionPolicy=$(ab "$existingVersionPolicy") (wanted: $(ab "$versionPolicy")), package=$(ab "$existingPackage") (wanted: $(ab "$package")). Cannot continue, please fix your requirements."
+			fi
+		else
+			_log_if_verbose "Found req for program $(ab "$programName"), versionPolicy=$(ab "$versionPolicy"), package=$(ab "$package") (already present)"
 		fi
 	else
 		_REQ_INCLUDED="$_REQ_INCLUDED $programName:$versionPolicy:$package"
-		if [ -n "$_REQ_VERBOSE" ] ; then
-	    	log "Found req for program $(ab "$programName"), versionPolicy=$(ab "$versionPolicy"), package=$(ab "$package")"
-		fi
+		_log_if_verbose "Found req for program $(ab "$programName"), versionPolicy=$(ab "$versionPolicy"), package=$(ab "$package")"
 	fi
 }
 
