@@ -10,7 +10,7 @@ _ASDF_CHECKED=no
 
 _initialize_asdf() {
     # Ensure that asdf integration is installed (otherwise, we couldn't export asdf-set plugin versions)
-    source_if_exists "$HOME/.asdf/asdf.sh"
+    source_if_exists "${ASDF_DIR:-$HOME/.asdf}/asdf.sh"
     if exists brew; then
         source_if_exists "$(brew --prefix asdf)/libexec/asdf.sh"
     fi
