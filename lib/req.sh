@@ -85,7 +85,7 @@ _asdf() {
 _req1_without_asdf() {
 	local program="$1"
     local versionPolicy="$2"
-	start_log_line "Checking $(ab "$program")"
+	emit_log "Checking $(ab "$program") ... "
 	if [ "$versionPolicy" != "$_VERSION_NO_CHECK" ] && [ "$versionPolicy" != "$_VERSION_ANY" ]; then
 		emit_log "no $(_asdf) (but required), just checking existence, "
 	fi
@@ -122,7 +122,7 @@ _req1_with_asdf_inner_on_new_line() {
     local package="$3"
 	local versionPolicyDescription
 	versionPolicyDescription="$(_describe_version "$versionPolicy")"
-	start_log_line "Checking $(ab "$program")$versionPolicyDescription via $(_asdf)"
+	emit_log "Checking $(ab "$program")$versionPolicyDescription via $(_asdf) ... "
 	_req1_with_asdf_inner "$program" "$versionPolicy" "$package"
 }
 
@@ -189,7 +189,7 @@ _req1_with_asdf() {
     local versionPolicy="$2"
 	local package="$3"
 	if [ "$versionPolicy" = "$_VERSION_NO_CHECK" ] || [ "$versionPolicy" = "$_VERSION_ANY" ]; then
-		start_log_line "Checking $(ab "$program")"
+		emit_log "Checking $(ab "$program") ... "
 		if _is_shim "$program"; then
 			emit_log "it's a shim, using $(_asdf), "
 			# Program not found, using asdf to install it (using latest version, since no version was specified)
@@ -225,11 +225,20 @@ _req1() {
 	local program="$1"
     local versionPolicy="$2"
     local package="$3"
-	if has_asdf; then
-		_req1_with_asdf "$program" "$versionPolicy" "$package"
-	else
-		_req1_without_asdf "$program" "$versionPolicy"
+	local tempOutput
+	tempOutput="$(mktemp)"
+	if [ -z "$tempOutput" ]; then
+		whine "Can't create temp file for tracing req_check's output!"
 	fi
+	{
+		if has_asdf; then
+			_req1_with_asdf "$program" "$versionPolicy" "$package"
+		else
+			_req1_without_asdf "$program" "$versionPolicy"
+		fi
+	} >"$tempOutput" 2>&1
+	log "$(cat "$tempOutput")"
+	\rm "$tempOutput"
 }
 
 _log_if_verbose() {
@@ -366,7 +375,8 @@ req_check() {
 		local secondPart=${entry#*:}
 		local versionPolicy=${secondPart%%:*}
 		local package=${secondPart##*:}
-		_req1 "$program" "$versionPolicy" "$package"
+		_req1 "$program" "$versionPolicy" "$package" &
 	done
+	wait
 	log "$(green "Script sanity checks completed successfully, current script $(ab "$0") can start.")"
 }
