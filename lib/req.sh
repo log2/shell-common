@@ -219,6 +219,7 @@ _req1_with_asdf() {
 		# Search for latest version of program using asdf
 		_req1_with_asdf_inner_on_new_line "$program" "$versionPolicy" "$package"
 	fi
+	env | grep -E "ASDF_.+_VERSION" >&3
 }
 
 _req1() {
@@ -369,14 +370,30 @@ req_check() {
 	REQ_CHECKED=1
 
 	log "Performing pre-boot script sanity checks [$(_describe_asdf_status)] ..."
+	tempVersions=()
 	for entry in $_REQ_INCLUDED
 	do
 		local program=${entry%%:*}
 		local secondPart=${entry#*:}
 		local versionPolicy=${secondPart%%:*}
 		local package=${secondPart##*:}
-		_req1 "$program" "$versionPolicy" "$package" &
+		local tempVersion
+		tempVersion="$(mktemp)"
+		_req1 "$program" "$versionPolicy" "$package" 3>"$tempVersion" &
+		tempVersions+=("$tempVersion")
 	done
 	wait
+	for tempVersion in "${tempVersions[@]}"
+	do
+		while IFS= read -r line
+		do
+			local var
+			var="$(echo "$line" | cut -d"=" -f1)"
+			local value
+			value="$(echo "$line" | cut -d"=" -f2-)"
+			export "$var"="$value"
+		done < "$tempVersion"
+		rm "$tempVersion"
+	done
 	log "$(green "Script sanity checks completed successfully, current script $(ab "$0") can start.")"
 }
