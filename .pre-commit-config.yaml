@@ -9,7 +9,7 @@ repos:
     -   id: check-yaml
     -   id: check-added-large-files
 -   repo: https://github.com/log2/pre-commit-shfmt
-    rev: v0.1.0
+    rev: v0.1.1
     hooks:
       -   id: shell-fmt
           args:
