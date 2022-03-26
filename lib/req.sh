@@ -49,8 +49,15 @@ _VERSION_NO_CHECK="-"
 _VERSION_ANY="x"
 _VERSION_ANY_VIA_ASDF_IF_AVAILABLE="asdf"
 
-_req_giveup() {
-	whine "Cowardly refusing to execute this script without the required program. Have a nice day!"
+_reqAbortMarker="ABORTED"
+
+_req_abort() {
+	_req_aborted=true
+	echo "$_reqAbortMarker" >&3
+}
+
+_req_is_aborted() {
+	[ -n "$_req_aborted" ]
 }
 
 _suggest_and_exit() {
@@ -69,7 +76,7 @@ _suggest_and_exit() {
 	else
 		i "Can't find a package manager to install $(b "$program")" >&2
 	fi
-	_req_giveup
+	_req_abort
 }
 
 _describe_program_and_version() {
@@ -142,6 +149,7 @@ _req1_with_asdf_inner() {
 			else
 				end_log_line_err "can't find $(ab "$program")"
 				_suggest_and_exit "$program"
+				return 1
 			fi
 		fi
     fi
@@ -150,7 +158,8 @@ _req1_with_asdf_inner() {
 	version="$(_asdf_find_latest "$pluginName" "$versionPolicy")"
 	if [ -z "$version" ]; then
 		end_log_line_err "can't find a suitable version!"
-		_req_giveup
+		_req_abort
+		return 1
 	fi
 	emit_log "found $(ab "$version"), "
 	if _asdf_version_is_installed "$pluginName" "$version"; then
@@ -163,7 +172,8 @@ _req1_with_asdf_inner() {
 			:
 		else
 			end_log_line_err "failed!"
-			_req_giveup
+			_req_abort
+			return 1
 		fi
     fi
 	emit_log "setting shell, "
@@ -171,7 +181,8 @@ _req1_with_asdf_inner() {
 		end_log_line "done."
 	else
 		end_log_line_err "failed!"
-		_req_giveup
+		_req_abort
+		return 1
 	fi
 }
 
@@ -219,7 +230,6 @@ _req1_with_asdf() {
 		# Search for latest version of program using asdf
 		_req1_with_asdf_inner_on_new_line "$program" "$versionPolicy" "$package"
 	fi
-	env | grep -E "ASDF_.+_VERSION" >&3
 }
 
 _req1() {
@@ -229,17 +239,22 @@ _req1() {
 	local tempOutput
 	tempOutput="$(mktemp)"
 	if [ -z "$tempOutput" ]; then
-		whine "Can't create temp file for tracing req_check's output!"
-	fi
-	{
-		if has_asdf; then
-			_req1_with_asdf "$program" "$versionPolicy" "$package"
-		else
-			_req1_without_asdf "$program" "$versionPolicy"
+		err "Can't create temporary file to store output of req_check!"
+		_req_abort
+	else
+		{
+			if has_asdf; then
+				_req1_with_asdf "$program" "$versionPolicy" "$package"
+			else
+				_req1_without_asdf "$program" "$versionPolicy"
+			fi
+		} >"$tempOutput" 2>&1
+		log "$(cat "$tempOutput")"
+		\rm "$tempOutput"
+		if ! _req_is_aborted; then
+			env | grep -E "ASDF_.+_VERSION" >&3
 		fi
-	} >"$tempOutput" 2>&1
-	log "$(cat "$tempOutput")"
-	\rm "$tempOutput"
+	fi
 }
 
 _log_if_verbose() {
@@ -371,6 +386,7 @@ req_check() {
 
 	log "Performing pre-boot script sanity checks [$(_describe_asdf_status)] ..."
 	tempVersions=()
+	local prefix="_______"
 	for entry in $_REQ_INCLUDED
 	do
 		local program=${entry%%:*}
@@ -378,15 +394,20 @@ req_check() {
 		local versionPolicy=${secondPart%%:*}
 		local package=${secondPart##*:}
 		local tempVersion
-		tempVersion="$(mktemp)"
+		tempVersion="$(mktemp -t "${program}${prefix}")"
 		_req1 "$program" "$versionPolicy" "$package" 3>"$tempVersion" &
 		tempVersions+=("$tempVersion")
 	done
 	wait
 	for tempVersion in "${tempVersions[@]}"
 	do
+		local simpleFileName="${tempVersion##*/}"
+		local program="${simpleFileName%%"${prefix}"*}"
 		while IFS= read -r line
 		do
+			if [ "$line" == "$_reqAbortMarker" ]; then
+				whine "Cowardly refusing to execute this script without the required program \"$program\". Have a nice day!"
+			fi
 			local var
 			var="$(echo "$line" | cut -d"=" -f1)"
 			local value
