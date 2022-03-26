@@ -70,5 +70,3 @@ EOF
 #     shellmock_verify
 #     [ "${capture[0]}" = "du-stub -d 0 -h $dir" ]
 # }
-
-

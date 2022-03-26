@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-if type dep &>/dev/null ; then
+if type dep &>/dev/null; then
     dep include log2/shell-common exist
 else
     include log2/shell-common lib/exist.sh
@@ -8,7 +8,8 @@ fi
 
 _ASDF_CHECKED=no
 
-_initialize_asdf() {
+_initialize_asdf()
+{
     # Ensure that asdf integration is installed (otherwise, we couldn't export asdf-set plugin versions)
     source_if_exists "${ASDF_DIR:-$HOME/.asdf}/asdf.sh"
     if exists brew; then
@@ -16,11 +17,13 @@ _initialize_asdf() {
     fi
 }
 
-could_use_asdf() {
+could_use_asdf()
+{
     exists asdf && exists grep && exists xargs && exists tr && exists tail && exists sort
 }
 
-has_asdf() {
+has_asdf()
+{
     if [ "$_ASDF_CHECKED" == "no" ]; then
         if [ -z "$_ASDF_DISABLED" ] && could_use_asdf; then
             _ASDF_CHECKED=found
@@ -37,13 +40,15 @@ has_asdf() {
     fi
 }
 
-ensure_asdf() {
+ensure_asdf()
+{
     if ! has_asdf; then
         whine "$(b asdf) not available, please install it via $(ab "brew install asdf")"
     fi
 }
 
-get_all_asdf_available_plugins() {
+get_all_asdf_available_plugins()
+{
     ensure_asdf
     if [ "$_ALL_ASDF_PLUGINS_AVAILABLE" = "" ]; then
         # Cache list of all asdf plugins available
@@ -52,17 +57,20 @@ get_all_asdf_available_plugins() {
     echo "$_ALL_ASDF_PLUGINS_AVAILABLE"
 }
 
-_asdf_has_plugin() {
+_asdf_has_plugin()
+{
     local pluginName="$1"
     asdf plugin-list | grep -q "^$pluginName\$"
 }
 
-_asdf_add_plugin() {
+_asdf_add_plugin()
+{
     local pluginName="$1"
     asdf plugin-add "$pluginName"
 }
 
-ensure_asdf_plugin() {
+ensure_asdf_plugin()
+{
     local pluginName="$1"
     if ensure_asdf; then
         if ! _asdf_has_plugin "$pluginName"; then
@@ -73,24 +81,28 @@ ensure_asdf_plugin() {
     fi
 }
 
-_asdf_version_is_installed() {
+_asdf_version_is_installed()
+{
     local pluginName="$1"
     local version="$2"
     asdf list "$pluginName" 2>/dev/null | grep -q "$version"
 }
 
-_asdf_update() {
+_asdf_update()
+{
     local pluginName="$1"
     asdf plugin update "$pluginName" >/dev/null 2>&1
 }
 
-_asdf_install() {
+_asdf_install()
+{
     local pluginName="$1"
     local version="$2"
     asdf install "$pluginName" "$version" >/dev/null 2>&1
 }
 
-ensure_asdf_plugin_version() {
+ensure_asdf_plugin_version()
+{
     local pluginName="$1"
     local version="$2"
     if ensure_asdf_plugin "$pluginName"; then
@@ -108,13 +120,15 @@ ensure_asdf_plugin_version() {
     fi
 }
 
-_asdf_set_shell_version() {
+_asdf_set_shell_version()
+{
     local pluginName="$1"
     local version="$2"
     asdf shell "$pluginName" "$version"
 }
 
-ensure_asdf_plugin_version_shell() {
+ensure_asdf_plugin_version_shell()
+{
     local pluginName="$1"
     local version="$2"
     if ensure_asdf_plugin_version "$pluginName" "$version"; then
@@ -129,8 +143,9 @@ ensure_asdf_plugin_version_shell() {
     fi
 }
 
-_derive_asdf_plugin_name() {
-	local program="$1"
+_derive_asdf_plugin_name()
+{
+    local program="$1"
     local package="$2"
     if [ -n "$package" ]; then
         echo "$package"
@@ -139,21 +154,24 @@ _derive_asdf_plugin_name() {
     fi
 }
 
-_asdf_find_latest() {
-	local pluginName="$1"
-	local pluginVersionPrefix="$2"
-	local latestMatchingVersion
-    _get_all_versions() {
+_asdf_find_latest()
+{
+    local pluginName="$1"
+    local pluginVersionPrefix="$2"
+    local latestMatchingVersion
+    _get_all_versions()
+    {
         asdf list-all "$pluginName" 2>/dev/null
         asdf list "$pluginName" 2>/dev/null | xargs | tr ' ' '\n' # merge with already installed versions, to overcome transient misbehaviour in list-all of some plugins (e.g., see https://github.com/sudermanjr/asdf-yq/issues/10)
     }
-    _grab_latest() {
+    _grab_latest()
+    {
         grep -vE '(alpha|beta|rc)' | sort -V | tail -1
     }
-	if [ "$pluginVersionPrefix" = "" ]; then
-		latestMatchingVersion="$(_get_all_versions | _grab_latest)"
-	else
-		latestMatchingVersion="$(_get_all_versions | grep ^"$pluginVersionPrefix" | _grab_latest)"
-	fi
-	echo "$latestMatchingVersion"
+    if [ "$pluginVersionPrefix" = "" ]; then
+        latestMatchingVersion="$(_get_all_versions | _grab_latest)"
+    else
+        latestMatchingVersion="$(_get_all_versions | grep ^"$pluginVersionPrefix" | _grab_latest)"
+    fi
+    echo "$latestMatchingVersion"
 }

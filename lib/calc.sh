@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
 
-compute() {
+compute()
+{
     local expression="$*"
     awk "BEGIN { print $expression }"
 }
 
-to_num() {
+to_num()
+{
     local number="$*"
     compute "$number"
 }

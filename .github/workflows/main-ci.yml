@@ -59,4 +59,3 @@ jobs:
     # Runs BATS tests
     - name: Run BATS tests
       run: BASHER_ROOT=${GITHUB_WORKSPACE}/stub/basher BASHER_PREFIX=${GITHUB_WORKSPACE}/stub TERM=xterm bats tests
-

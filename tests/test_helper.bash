@@ -26,35 +26,40 @@ mkdir -p "${COMMON_ORIGIN_DIR}"
 
 mkdir -p "${COMMON_CWD}"
 
-setup() {
-  cd "${COMMON_CWD}" || exit
+setup()
+{
+    cd "${COMMON_CWD}" || exit
 }
 
-teardown() {
-  rm -rf "$COMMON_TEST_DIR"
+teardown()
+{
+    rm -rf "$COMMON_TEST_DIR"
 }
 
-lib() {
-  local libname="$1"
-  common_file "lib/$libname.sh"
+lib()
+{
+    local libname="$1"
+    common_file "lib/$libname.sh"
 }
 
-common_file() {
-  local filename="$1"
-  echo "${COMMON_ROOT}/$filename"
+common_file()
+{
+    local filename="$1"
+    echo "${COMMON_ROOT}/$filename"
 }
 
-include() {
-  local package="$1"
-  local filename="$2"
-  local expectedPackage="log2/shell-common"
-  if [ "$package" == "$expectedPackage" ]; then
-    # shellcheck disable=SC1090
-    source "$(common_file "$filename")"
-  else
-    echo "include from $package (different from expected $expectedPackage) is not supported, can't include $filename"
-    exit 1
-  fi
+include()
+{
+    local package="$1"
+    local filename="$2"
+    local expectedPackage="log2/shell-common"
+    if [ "$package" == "$expectedPackage" ]; then
+        # shellcheck disable=SC1090
+        source "$(common_file "$filename")"
+    else
+        echo "include from $package (different from expected $expectedPackage) is not supported, can't include $filename"
+        exit 1
+    fi
 }
 
 # load lib/mocks
