@@ -366,7 +366,13 @@ req()
     # Behaviour:
     # - without asdf: if program is already installed, use it and print version if available, otherwise fail
     # - without asdf: if program is already installed, use it, otherwise try to install its latest version using asdf
-    for p in "$@"; do _req "${p}" "$_VERSION_ANY"; done
+    for p in "$@"; do
+        if [ -n "${p}" ]; then
+            _req "${p}" "$_VERSION_ANY"
+        else
+            exit_err "Req arguments: $(ab "$@")\nCannot require program with empty name, perhaps you wanted to us $(b req_ver) ?"
+        fi
+    done
 }
 
 req_no_ver()
@@ -374,7 +380,13 @@ req_no_ver()
     # Behaviour:
     # - without asdf: if program is already installed, use it (without calling it to get the version), otherwise fail
     # - with asdf: if program is already installed, use it (without calling it to get the version), otherwise try to install its latest version using asdf
-    for p in "$@"; do _req "${p}" "$_VERSION_NO_CHECK"; done
+    for p in "$@"; do
+        if [ -n "${p}" ]; then
+            _req "${p}" "$_VERSION_NO_CHECK"
+        else
+            exit_err "Req arguments: $(ab "$@")\nCannot require program with empty name, perhaps you wanted to us $(b req_ver) ?"
+        fi
+    done
 }
 
 req_ver()
