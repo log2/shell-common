@@ -85,7 +85,7 @@ _asdf_version_is_installed()
 {
     local pluginName="$1"
     local version="$2"
-    asdf list "$pluginName" 2>/dev/null | grep -q "$version"
+    asdf list "$pluginName" 2>/dev/null | grep -qE "^\s*${version}$"
 }
 
 _asdf_update()
@@ -158,20 +158,24 @@ _asdf_find_latest()
 {
     local pluginName="$1"
     local pluginVersionPrefix="$2"
-    local latestMatchingVersion
-    _get_all_versions()
-    {
-        asdf list-all "$pluginName" 2>/dev/null
-        asdf list "$pluginName" 2>/dev/null | xargs | tr ' ' '\n' # merge with already installed versions, to overcome transient misbehaviour in list-all of some plugins (e.g., see https://github.com/sudermanjr/asdf-yq/issues/10)
-    }
-    _grab_latest()
-    {
-        grep -vE '(alpha|beta|rc)' | sort -V | tail -1
-    }
-    if [ "$pluginVersionPrefix" = "" ]; then
-        latestMatchingVersion="$(_get_all_versions | _grab_latest)"
-    else
-        latestMatchingVersion="$(_get_all_versions | grep ^"$pluginVersionPrefix" | _grab_latest)"
+
+    if ! asdf latest "$pluginName" "$pluginVersionPrefix" 2>/dev/null; then
+        # Fallback when GitHub quota is exhausted
+        local latestMatchingVersion
+        _get_all_versions()
+        {
+            asdf list-all "$pluginName" 2>/dev/null
+            asdf list "$pluginName" 2>/dev/null | xargs | tr ' ' '\n' # merge with already installed versions, to overcome transient misbehaviour in list-all of some plugins (e.g., see https://github.com/sudermanjr/asdf-yq/issues/10)
+        }
+        _grab_latest()
+        {
+            grep -vE '(alpha|beta|rc)' | sort -V | tail -1
+        }
+        if [ "$pluginVersionPrefix" = "" ]; then
+            latestMatchingVersion="$(_get_all_versions | _grab_latest)"
+        else
+            latestMatchingVersion="$(_get_all_versions | grep ^"$pluginVersionPrefix" | _grab_latest)"
+        fi
+        echo "$latestMatchingVersion"
     fi
-    echo "$latestMatchingVersion"
 }
