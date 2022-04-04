@@ -439,7 +439,7 @@ req_check()
             fi
         done
     }
-    trap cleanup_temporary_version_files EXIT
+    trap cleanup_temporary_version_files RETURN
     wait
     for tempVersion in "${tempVersions[@]}"; do
         local simpleFileName="${tempVersion##*/}"
