@@ -420,7 +420,7 @@ req_check()
 
     log "Performing pre-boot script sanity checks [$(_describe_asdf_status)] ..."
     tempVersions=()
-    local programNameMarker="_______"
+    local programNameMarker="XXXXXXX"
     for entry in $_REQ_INCLUDED; do
         local program=${entry%%:*}
         local secondPart=${entry#*:}
