@@ -159,6 +159,15 @@ _asdf_find_latest()
     local pluginName="$1"
     local pluginVersionPrefix="$2"
 
+    if [ -n "$pluginVersionPrefix" ]; then
+        local localMatchingVersion
+        localMatchingVersion="$(asdf list "$pluginName" "$pluginVersionPrefix" 2>/dev/null)"
+        if [ $? -eq 0 ] && [ -n "$localMatchingVersion" ]; then
+            echo "$localMatchingVersion" | xargs
+            # Local check succeded, use locally available version
+            return 0
+        fi
+    fi
     if ! asdf latest "$pluginName" "$pluginVersionPrefix" 2>/dev/null; then
         # Fallback when GitHub quota is exhausted
         local latestMatchingVersion
