@@ -161,11 +161,12 @@ _asdf_find_latest()
 
     if [ -n "$pluginVersionPrefix" ]; then
         local localMatchingVersion
-        localMatchingVersion="$(asdf list "$pluginName" "$pluginVersionPrefix" 2>/dev/null)"
-        if [ $? -eq 0 ] && [ -n "$localMatchingVersion" ]; then
-            echo "$localMatchingVersion" | xargs
-            # Local check succeded, use locally available version
-            return 0
+        if localMatchingVersion="$(asdf list "$pluginName" "$pluginVersionPrefix" 2>/dev/null)"; then
+            if [ -n "$localMatchingVersion" ]; then
+                echo "$localMatchingVersion" | xargs
+                # Local check succeded, use locally available version
+                return 0
+            fi
         fi
     fi
     if ! asdf latest "$pluginName" "$pluginVersionPrefix" 2>/dev/null; then
