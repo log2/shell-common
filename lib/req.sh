@@ -3,11 +3,13 @@
 if type dep &>/dev/null; then
     dep include log2/shell-common exist
     dep include log2/shell-common log
+    dep include log2/shell-common files
     dep include log2/shell-common asdf
     dep include log2/shell-common strings
 else
     include log2/shell-common lib/exist.sh
     include log2/shell-common lib/log.sh
+    include log2/shell-common lib/files.sh
     include log2/shell-common lib/asdf.sh
     include log2/shell-common lib/strings.sh
 fi
@@ -76,7 +78,7 @@ _describe_program_and_version()
 {
     local program="$1"
     local version="$2"
-    echo "$(ab "$(wh "$program")") (version: $(ab "$version"))"
+    echo "$(ab "$(tildify "$(wh "$program")")") (version: $(ab "$version"))"
 }
 
 _asdf()
