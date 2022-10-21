@@ -77,3 +77,16 @@ volume_used_space()
     local volume="$1"
     _volume_size_component "$volume" 2
 }
+
+#
+# Replaces full $HOME path with ~
+#
+tildify()
+{
+    local path="$1"
+    if [[ "$path" =~ ^$HOME* ]]; then
+        echo -n "~${path#$HOME}"
+    else
+        echo -n "$path"
+    fi
+}
