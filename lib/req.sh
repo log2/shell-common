@@ -458,5 +458,5 @@ req_check()
         done <"$tempVersion"
         rm "$tempVersion"
     done
-    log "$(green "Script sanity checks completed successfully, current script $(ab "$0") can start.")"
+    log "$(green "Script sanity checks completed successfully, current script $(ab "$(tildify "$0")") can start.")"
 }
