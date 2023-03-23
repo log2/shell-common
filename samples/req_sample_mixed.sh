@@ -1,15 +1,19 @@
 #!/usr/bin/env bash
 
+set -euo pipefail
+
 eval "$(direnv stdlib)"
 
 export _DEP_VERBOSENESS_LEVEL=0
 
 # shellcheck disable=SC1090
-. "$(fetchurl "https://raw.githubusercontent.com/EcoMind/dep-bootstrap/0.5.1/dep-bootstrap.sh" "sha256-lOYbrk89hNgXowWn1q17tpqUeNnEXJLyDTl7mLhbcpU=")" 0.5.1
+. "$(fetchurl "https://raw.githubusercontent.com/EcoMind/dep-bootstrap/0.5.5/dep-bootstrap.sh" "sha256-rtqYzq7o1d+rymFH00Cq/tve28vbOKSKxoDFvO0zjd4=")" 0.5.5
 
 dep define "log2/shell-common:local-SNAPSHOT"
 
 dep include log2/shell-common req
+
+#_REQ_VERBOSE=1
 
 # working without asdf
 req shellcheck
@@ -18,7 +22,7 @@ req_no_ver wc
 req xmlstarlet
 req docker
 req git
-req realpath
+req_no_ver realpath
 req grep
 req_no_ver sed
 req_no_ver tr
@@ -29,7 +33,7 @@ req_no_ver cut
 # working better with asdf
 req eksctl
 req_no_ver kubectl
-req_ver az
+req_ver az 2.45.0 azure-cli
 req_ver jq "1.6"
 req helm
 
