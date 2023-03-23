@@ -464,7 +464,7 @@ req_check()
         rm "$tempVersion"
     done
     if ((${#failedRequirements[@]} > 0)); then
-        whine "Cowardly refusing to execute this script without the required programs $failedRequirements. Have a nice day!"
+        whine "Cowardly refusing to execute this script without the required programs ${failedRequirements[*]}. Have a nice day!"
     else
         log "$(green "Script sanity checks completed successfully, current script $(ab "$(tildify "$0")") can start.")"
     fi
