@@ -106,7 +106,7 @@ _asdf_version_is_installed()
 {
     local pluginName="$1"
     local version="$2"
-    asdf list "$pluginName" 2>/dev/null | grep -qE "^\s*${version}$"
+    asdf list "$pluginName" 2>/dev/null | grep -qE "^\s*\*?${version}$"
 }
 
 _asdf_update()
@@ -175,6 +175,12 @@ _derive_asdf_plugin_name()
     fi
 }
 
+_asdf_version_cleanup()
+{
+    local version="$1"
+    echo "${version/ *\*/}" | xargs
+}
+
 _asdf_find_latest()
 {
     local pluginName="$1"
@@ -184,7 +190,7 @@ _asdf_find_latest()
         local localMatchingVersion
         if localMatchingVersion="$(asdf list "$pluginName" "$pluginVersionPrefix" 2>/dev/null)"; then
             if [ -n "$localMatchingVersion" ]; then
-                echo "$localMatchingVersion" | xargs
+                _asdf_version_cleanup "$localMatchingVersion"
                 # Local check succeded, use locally available version
                 return 0
             fi
@@ -207,6 +213,6 @@ _asdf_find_latest()
         else
             latestMatchingVersion="$(_get_all_versions | grep ^"$pluginVersionPrefix" | _grab_latest)"
         fi
-        echo "$latestMatchingVersion"
+        _asdf_version_cleanup "$latestMatchingVersion"
     fi
 }
