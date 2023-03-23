@@ -52,7 +52,7 @@ get_all_asdf_available_plugins()
     ensure_asdf
     if [ -z "${_ALL_ASDF_PLUGINS_AVAILABLE:-}" ]; then
         # Cache list of all asdf plugins available
-        _ALL_ASDF_PLUGINS_AVAILABLE="$(asdf plugin-list-all)"
+        _ALL_ASDF_PLUGINS_AVAILABLE="$(asdf plugin list all)"
     fi
     echo "$_ALL_ASDF_PLUGINS_AVAILABLE"
 }

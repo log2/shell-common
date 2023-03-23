@@ -441,9 +441,7 @@ req_check()
     cleanup_temporary_version_files()
     {
         for tempVersion in "${tempVersions[@]}"; do
-            if [ -f "$tempVersion" ]; then
-                \rm "$tempVersion"
-            fi
+            [ -f "$tempVersion" ] && \rm "$tempVersion"
         done
         [ -n "${_temp_cached_asdf_plugin_list_file:-}" ] && [ -f "$_temp_cached_asdf_plugin_list_file" ] && \rm "$_temp_cached_asdf_plugin_list_file"
     }
