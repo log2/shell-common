@@ -57,16 +57,37 @@ get_all_asdf_available_plugins()
     echo "$_ALL_ASDF_PLUGINS_AVAILABLE"
 }
 
+_cached_asdf_plugin_list_file=
+
+_asdf_all_installed_plugins()
+{
+    ensure_asdf
+    if [ -z "${_cached_asdf_plugin_list:-}" ]; then
+        if [ -n "${_cached_asdf_plugin_list_file:-}" ]; then
+            while [ ! -s "${_cached_asdf_plugin_list_file}" ]; do
+                sleep 0.1
+            done
+            _cached_asdf_plugin_list="$(cat "${_cached_asdf_plugin_list_file}")"
+        else
+            _cached_asdf_plugin_list="$(asdf plugin list)"
+        fi
+    fi
+    echo "$_cached_asdf_plugin_list"
+}
+
 _asdf_has_plugin()
 {
     local pluginName="$1"
-    asdf plugin-list | grep -q "^$pluginName\$"
+    _asdf_all_installed_plugins | grep -q "^$pluginName\$"
 }
 
 _asdf_add_plugin()
 {
     local pluginName="$1"
-    asdf plugin-add "$pluginName"
+    if asdf plugin add "$pluginName"; then
+        unset _cached_asdf_plugin_list_file
+        unset _cached_asdf_plugin_list
+    fi
 }
 
 ensure_asdf_plugin()

@@ -421,8 +421,13 @@ req_check()
     REQ_CHECKED=1
 
     log "Performing pre-boot script sanity checks [$(_describe_asdf_status)] ..."
-    tempVersions=()
     local programNameMarker="XXXXXXX"
+    local _temp_cached_asdf_plugin_list_file=""
+    if has_asdf; then
+        _temp_cached_asdf_plugin_list_file="$(mktemp -t "_asdf_plugin_list_cache_${programNameMarker}")"
+        _asdf_all_installed_plugins >"$_temp_cached_asdf_plugin_list_file" &
+    fi
+    tempVersions=()
     for entry in $_REQ_INCLUDED; do
         local program=${entry%%:*}
         local secondPart=${entry#*:}
@@ -430,7 +435,7 @@ req_check()
         local package=${secondPart##*:}
         local tempVersion
         tempVersion="$(mktemp -t "${program}${programNameMarker}")"
-        _req1 "$program" "$versionPolicy" "$package" 3>"$tempVersion" &
+        _cached_asdf_plugin_list_file="${_temp_cached_asdf_plugin_list_file:-}" _req1 "$program" "$versionPolicy" "$package" 3>"$tempVersion" &
         tempVersions+=("$tempVersion")
     done
     cleanup_temporary_version_files()
@@ -440,6 +445,7 @@ req_check()
                 \rm "$tempVersion"
             fi
         done
+        [ -n "${_temp_cached_asdf_plugin_list_file:-}" ] && [ -f "$_temp_cached_asdf_plugin_list_file" ] && \rm "$_temp_cached_asdf_plugin_list_file"
     }
     trap cleanup_temporary_version_files RETURN
     wait
