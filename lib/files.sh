@@ -85,7 +85,7 @@ tildify()
 {
     local path="$1"
     if [[ "$path" =~ ^$HOME* ]]; then
-        echo -n "~${path#$HOME}"
+        echo -n "~${path#"$HOME"}"
     else
         echo -n "$path"
     fi
