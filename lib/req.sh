@@ -138,8 +138,8 @@ _req1_with_asdf_inner_on_new_line()
 _req1_with_asdf_inner()
 {
     local program="$1"
-    local versionPolicy="$2"
-    local package="$3"
+    local versionPolicy="${2:-}"
+    local package="${3:-}"
     pluginName="$(_derive_asdf_plugin_name "$program" "$package")"
     emit_log "plugin $(ab "$pluginName"), "
     if ! _asdf_has_plugin "$pluginName"; then
@@ -198,9 +198,9 @@ _is_shim()
 
 _req1_with_asdf()
 {
-    local program="$1"
-    local versionPolicy="$2"
-    local package="$3"
+    local program="${1:-}"
+    local versionPolicy="${2:-}"
+    local package="${3:-}"
     if [ "$versionPolicy" = "$_VERSION_NO_CHECK" ] || [ "$versionPolicy" = "$_VERSION_ANY" ]; then
         emit_log "Checking $(ab "$program") ... "
         if _is_shim "$program"; then
@@ -271,7 +271,7 @@ _req1()
 _log_if_verbose()
 {
     local message=("$@")
-    if [ -n "$_REQ_VERBOSE" ]; then
+    if [ -n "${_REQ_VERBOSE:-}" ]; then
         log "${message[@]}"
     fi
 }
@@ -330,13 +330,13 @@ _compatible_packages()
 
 _req()
 {
-    if [[ $REQ_CHECKED = 1 ]]; then
+    if [[ "${REQ_CHECKED:-}" = 1 ]]; then
         exit_err "pre-boot script sanity checks already done, please define all requirements (i.e. all $(b req), $(b req_no_ver), and $(b req_ver) calls) before calling $(b req_check)"
     fi
     programName="$1"
     versionPolicy="$2"
-    package="$3"
-    if [[ $_REQ_INCLUDED = *" $programName:"* ]]; then
+    package="${3:-}"
+    if [[ "${_REQ_INCLUDED:-}" = *" $programName:"* ]]; then
         local includedPart=${_REQ_INCLUDED#*" $programName:"}
         local includedValue=${includedPart%%" "*}
         if [[ $includedValue != "$versionPolicy:$package" ]]; then
@@ -358,7 +358,7 @@ _req()
             _log_if_verbose "Found req for program $(ab "$programName"), versionPolicy=$(ab "$versionPolicy"), package=$(ab "$package") (already present)"
         fi
     else
-        _REQ_INCLUDED="$_REQ_INCLUDED $programName:$versionPolicy:$package"
+        _REQ_INCLUDED="${_REQ_INCLUDED:-} $programName:$versionPolicy:$package"
         _log_if_verbose "Found req for program $(ab "$programName"), versionPolicy=$(ab "$versionPolicy"), package=$(ab "$package")"
     fi
 }
@@ -398,7 +398,7 @@ req_ver()
     # - with asdf: try to install its latest matching version using asdf, otherwise fail
     local program="$1"
     local versionSpec="${2:-$_VERSION_ANY_VIA_ASDF_IF_AVAILABLE}"
-    local package="${3}"
+    local package="${3:-}"
     _req "$program" "$versionSpec" "$package"
 }
 

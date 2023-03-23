@@ -14,7 +14,7 @@ vanilla()
 
 prepare_styling()
 {
-    if exists tput && [ -z "$_DISABLE_STYLING" ]; then
+    if exists tput && [ -z "${_DISABLE_STYLING:-}" ]; then
         STYLE_BOLD="$(tput bold)"
         STYLE_OFF="$(tput sgr0)"
         COLOR_NORMAL="$(tput setaf 7)"
