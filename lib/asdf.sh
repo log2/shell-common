@@ -25,7 +25,7 @@ could_use_asdf()
 has_asdf()
 {
     if [ "$_ASDF_CHECKED" == "no" ]; then
-        if [ -z "$_ASDF_DISABLED" ] && could_use_asdf; then
+        if [ -z "${_ASDF_DISABLED:-}" ] && could_use_asdf; then
             _ASDF_CHECKED=found
             _initialize_asdf
             return 0
@@ -50,23 +50,44 @@ ensure_asdf()
 get_all_asdf_available_plugins()
 {
     ensure_asdf
-    if [ "$_ALL_ASDF_PLUGINS_AVAILABLE" = "" ]; then
+    if [ -z "${_ALL_ASDF_PLUGINS_AVAILABLE:-}" ]; then
         # Cache list of all asdf plugins available
-        _ALL_ASDF_PLUGINS_AVAILABLE="$(asdf plugin-list-all)"
+        _ALL_ASDF_PLUGINS_AVAILABLE="$(asdf plugin list all)"
     fi
     echo "$_ALL_ASDF_PLUGINS_AVAILABLE"
+}
+
+_cached_asdf_plugin_list_file=
+
+_asdf_all_installed_plugins()
+{
+    ensure_asdf
+    if [ -z "${_cached_asdf_plugin_list:-}" ]; then
+        if [ -n "${_cached_asdf_plugin_list_file:-}" ]; then
+            while [ ! -s "${_cached_asdf_plugin_list_file}" ]; do
+                sleep 0.1
+            done
+            _cached_asdf_plugin_list="$(cat "${_cached_asdf_plugin_list_file}")"
+        else
+            _cached_asdf_plugin_list="$(asdf plugin list)"
+        fi
+    fi
+    echo "$_cached_asdf_plugin_list"
 }
 
 _asdf_has_plugin()
 {
     local pluginName="$1"
-    asdf plugin-list | grep -q "^$pluginName\$"
+    _asdf_all_installed_plugins | grep -q "^$pluginName\$"
 }
 
 _asdf_add_plugin()
 {
     local pluginName="$1"
-    asdf plugin-add "$pluginName"
+    if asdf plugin add "$pluginName"; then
+        unset _cached_asdf_plugin_list_file
+        unset _cached_asdf_plugin_list
+    fi
 }
 
 ensure_asdf_plugin()
@@ -85,7 +106,7 @@ _asdf_version_is_installed()
 {
     local pluginName="$1"
     local version="$2"
-    asdf list "$pluginName" 2>/dev/null | grep -qE "^\s*${version}$"
+    asdf list "$pluginName" 2>/dev/null | grep -qE "^\s*\*?${version}$"
 }
 
 _asdf_update()
@@ -154,6 +175,12 @@ _derive_asdf_plugin_name()
     fi
 }
 
+_asdf_version_cleanup()
+{
+    local version="$1"
+    echo "${version/ *\*/}" | xargs
+}
+
 _asdf_find_latest()
 {
     local pluginName="$1"
@@ -163,7 +190,7 @@ _asdf_find_latest()
         local localMatchingVersion
         if localMatchingVersion="$(asdf list "$pluginName" "$pluginVersionPrefix" 2>/dev/null)"; then
             if [ -n "$localMatchingVersion" ]; then
-                echo "$localMatchingVersion" | xargs
+                _asdf_version_cleanup "$localMatchingVersion"
                 # Local check succeded, use locally available version
                 return 0
             fi
@@ -181,11 +208,11 @@ _asdf_find_latest()
         {
             grep -vE '(alpha|beta|rc)' | sort -V | tail -1
         }
-        if [ "$pluginVersionPrefix" = "" ]; then
+        if [ -z "${pluginVersionPrefix:-}" ]; then
             latestMatchingVersion="$(_get_all_versions | _grab_latest)"
         else
             latestMatchingVersion="$(_get_all_versions | grep ^"$pluginVersionPrefix" | _grab_latest)"
         fi
-        echo "$latestMatchingVersion"
+        _asdf_version_cleanup "$latestMatchingVersion"
     fi
 }
