@@ -25,7 +25,7 @@ could_use_asdf()
 has_asdf()
 {
     if [ "$_ASDF_CHECKED" == "no" ]; then
-        if [ -z "$_ASDF_DISABLED" ] && could_use_asdf; then
+        if [ -z "${_ASDF_DISABLED:-}" ] && could_use_asdf; then
             _ASDF_CHECKED=found
             _initialize_asdf
             return 0
@@ -50,7 +50,7 @@ ensure_asdf()
 get_all_asdf_available_plugins()
 {
     ensure_asdf
-    if [ "$_ALL_ASDF_PLUGINS_AVAILABLE" = "" ]; then
+    if [ -z "${_ALL_ASDF_PLUGINS_AVAILABLE:-}" ]; then
         # Cache list of all asdf plugins available
         _ALL_ASDF_PLUGINS_AVAILABLE="$(asdf plugin-list-all)"
     fi
@@ -181,7 +181,7 @@ _asdf_find_latest()
         {
             grep -vE '(alpha|beta|rc)' | sort -V | tail -1
         }
-        if [ "$pluginVersionPrefix" = "" ]; then
+        if [ -z "${pluginVersionPrefix:-}" ]; then
             latestMatchingVersion="$(_get_all_versions | _grab_latest)"
         else
             latestMatchingVersion="$(_get_all_versions | grep ^"$pluginVersionPrefix" | _grab_latest)"
