@@ -443,12 +443,13 @@ req_check()
     }
     trap cleanup_temporary_version_files RETURN
     wait
+    local failedRequirements=()
     for tempVersion in "${tempVersions[@]}"; do
         local simpleFileName="${tempVersion##*/}"
         local program="${simpleFileName%%"${programNameMarker}"*}"
         while IFS= read -r line; do
             if [ "$line" == "$_reqAbortMarker" ]; then
-                whine "Cowardly refusing to execute this script without the required program \"$program\". Have a nice day!"
+                failedRequirements+=("\"$program\"")
             fi
             local var
             var="$(echo "$line" | cut -d"=" -f1)"
@@ -458,5 +459,9 @@ req_check()
         done <"$tempVersion"
         rm "$tempVersion"
     done
-    log "$(green "Script sanity checks completed successfully, current script $(ab "$(tildify "$0")") can start.")"
+    if ((${#failedRequirements[@]} > 0)); then
+        whine "Cowardly refusing to execute this script without the required programs $failedRequirements. Have a nice day!"
+    else
+        log "$(green "Script sanity checks completed successfully, current script $(ab "$(tildify "$0")") can start.")"
+    fi
 }
