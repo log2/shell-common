@@ -20,6 +20,8 @@ dep include log2/shell-common req
 req_ver_opt kubectl 1.99.1
 req_ver yq 4.20
 
+req_ver_opt zzz 99.1 non-existent-plugin
+
 # _req1_with_asdf kubectl "1.99.1"
 
 # _asdf_find_latest kubectl 1.99

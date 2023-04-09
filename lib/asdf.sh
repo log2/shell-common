@@ -87,6 +87,8 @@ _asdf_add_plugin()
     if asdf plugin add "$pluginName"; then
         unset _cached_asdf_plugin_list_file
         unset _cached_asdf_plugin_list
+    else
+        false
     fi
 }
 
