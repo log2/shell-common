@@ -401,6 +401,17 @@ req_ver()
     _req "$program" "$versionSpec" "$package"
 }
 
+req_ver_opt()
+{
+    # Behaviour:
+    # - without asdf: same as req (but with a warning) if program is already installed, otherwise just ignore
+    # - with asdf: try to install its latest matching version using asdf, otherwise just ignore
+    local program="$1"
+    local versionSpec="${2:-$_VERSION_ANY_VIA_ASDF_IF_AVAILABLE}"
+    local package="${3:-}"
+    _req "-$program" "$versionSpec" "$package"
+}
+
 _describe_asdf_status()
 {
     if has_asdf; then
@@ -432,9 +443,10 @@ req_check()
         local secondPart=${entry#*:}
         local versionPolicy=${secondPart%%:*}
         local package=${secondPart##*:}
+        local cleanedProgramName="${program#-}"
         local tempVersion
         tempVersion="$(mktemp -t "${program}${programNameMarker}")"
-        _cached_asdf_plugin_list_file="${_temp_cached_asdf_plugin_list_file:-}" _req1 "$program" "$versionPolicy" "$package" 3>"$tempVersion" &
+        _cached_asdf_plugin_list_file="${_temp_cached_asdf_plugin_list_file:-}" _req1 "$cleanedProgramName" "$versionPolicy" "$package" 3>"$tempVersion" &
         tempVersions+=("$tempVersion")
     done
     cleanup_temporary_version_files()
@@ -447,23 +459,31 @@ req_check()
     trap cleanup_temporary_version_files RETURN
     wait
     local failedRequirements=()
+    local failedOptionalRequirements=()
     for tempVersion in "${tempVersions[@]}"; do
         local simpleFileName="${tempVersion##*/}"
         local program="${simpleFileName%%"${programNameMarker}"*}"
         while IFS= read -r line; do
             if [ "$line" == "$_reqAbortMarker" ]; then
-                failedRequirements+=("\"$program\"")
+                if [[ "$program" = -* ]]; then
+                    failedOptionalRequirements+=("\"${program#-}\"")
+                else
+                    failedRequirements+=("\"$program\"")
+                fi
+            else
+                local var
+                var="$(echo "$line" | cut -d"=" -f1)"
+                local value
+                value="$(echo "$line" | cut -d"=" -f2-)"
+                export "$var"="$value"
             fi
-            local var
-            var="$(echo "$line" | cut -d"=" -f1)"
-            local value
-            value="$(echo "$line" | cut -d"=" -f2-)"
-            export "$var"="$value"
         done <"$tempVersion"
         rm "$tempVersion"
     done
     if ((${#failedRequirements[@]} > 0)); then
         whine "Cowardly refusing to execute this script without the required programs ${failedRequirements[*]}. Have a nice day!"
+    elif ((${#failedOptionalRequirements[@]} > 0)); then
+        log "$(yellow "Despite optional requirements ${failedOptionalRequirements[*]} are missing, this script $(ab "$(tildify "$0")")")" "$(yellow "can still start.")"
     else
         log "$(green "Script sanity checks completed successfully, current script $(ab "$(tildify "$0")") can start.")"
     fi
