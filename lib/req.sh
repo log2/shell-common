@@ -367,7 +367,7 @@ req()
 {
     # Behaviour:
     # - without asdf: if program is already installed, use it and print version if available, otherwise fail
-    # - without asdf: if program is already installed, use it, otherwise try to install its latest version using asdf
+    # - with asdf: if program is already installed, use it, otherwise try to install its latest version using asdf
     for p in "$@"; do
         if [ -n "${p}" ]; then
             _req "${p}" "$_VERSION_ANY"
