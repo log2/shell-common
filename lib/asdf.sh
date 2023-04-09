@@ -188,31 +188,45 @@ _asdf_find_latest()
 
     if [ -n "$pluginVersionPrefix" ]; then
         local localMatchingVersion
-        if localMatchingVersion="$(asdf list "$pluginName" "$pluginVersionPrefix" 2>/dev/null)"; then
+        if localMatchingVersion="$({
+            asdf list "$pluginName" "$pluginVersionPrefix" 2>/dev/null || true
+        })"; then
             if [ -n "$localMatchingVersion" ]; then
-                _asdf_version_cleanup "$localMatchingVersion"
+                _asdf_version_cleanup "$(echo "$localMatchingVersion" | head -1)"
                 # Local check succeded, use locally available version
                 return 0
             fi
         fi
     fi
-    if ! asdf latest "$pluginName" "$pluginVersionPrefix" 2>/dev/null; then
+    local latestMatchingVersion
+    latestMatchingVersion="$({
+        asdf latest "$pluginName" "$pluginVersionPrefix" 2>/dev/null || true
+    })"
+    if [ -z "$latestMatchingVersion" ]; then
         # Fallback when GitHub quota is exhausted
         local latestMatchingVersion
         _get_all_versions()
         {
-            asdf list-all "$pluginName" 2>/dev/null
-            asdf list "$pluginName" 2>/dev/null | xargs | tr ' ' '\n' # merge with already installed versions, to overcome transient misbehaviour in list-all of some plugins (e.g., see https://github.com/sudermanjr/asdf-yq/issues/10)
+            {
+                asdf list-all "$pluginName" 2>/dev/null || true
+            }
+            {
+                asdf list "$pluginName" 2>/dev/null || true
+            } | xargs | tr ' ' '\n' # merge with already installed versions, to overcome transient misbehaviour in list-all of some plugins (e.g., see https://github.com/sudermanjr/asdf-yq/issues/10)
         }
         _grab_latest()
         {
-            grep -vE '(alpha|beta|rc)' | sort -V | tail -1
+            {
+                grep -vE '(alpha|beta|rc)' || true
+            } | sort -V | tail -1
         }
         if [ -z "${pluginVersionPrefix:-}" ]; then
             latestMatchingVersion="$(_get_all_versions | _grab_latest)"
         else
-            latestMatchingVersion="$(_get_all_versions | grep ^"$pluginVersionPrefix" | _grab_latest)"
+            latestMatchingVersion="$(_get_all_versions | {
+                grep "^$pluginVersionPrefix" || true
+            } | _grab_latest)"
         fi
-        _asdf_version_cleanup "$latestMatchingVersion"
     fi
+    _asdf_version_cleanup "$latestMatchingVersion"
 }

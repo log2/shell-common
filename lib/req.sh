@@ -248,22 +248,21 @@ _req1()
     else
         close_and_track_asdf_versions()
         {
-            local exitCode=$?
             log "$(cat "$tempOutput")"
             rm "$tempOutput"
-            if [[ "$exitCode" != 0 ]]; then
-                echo "$_reqAbortMarker" >&3
-            else
-                env | grep -E "ASDF_.+_VERSION" >&3
-            fi
+            env | grep -E "ASDF_.+_VERSION" >&3
         }
         trap close_and_track_asdf_versions EXIT
         {
-            if has_asdf; then
-                _req1_with_asdf "$program" "$versionPolicy" "$package"
-            else
-                _req1_without_asdf "$program" "$versionPolicy"
-            fi
+            {
+                if has_asdf; then
+                    _req1_with_asdf "$program" "$versionPolicy" "$package"
+                else
+                    _req1_without_asdf "$program" "$versionPolicy"
+                fi
+            } || {
+                echo "$_reqAbortMarker" >&3
+            }
         } >"$tempOutput" 2>&1
     fi
 }
