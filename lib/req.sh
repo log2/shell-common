@@ -164,9 +164,7 @@ _req1_with_asdf_inner()
         return 1
     fi
     emit_log "found $(ab "$version"), "
-    if _asdf_version_is_installed "$pluginName" "$version"; then
-        :
-    else
+    if ! _asdf_version_is_installed "$pluginName" "$version"; then
         emit_log "updating, "
         _asdf_update "$pluginName"
         emit_log "installing version, "
