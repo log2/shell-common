@@ -64,7 +64,7 @@ _asdf_all_installed_plugins()
     ensure_asdf
     if [ -z "${_cached_asdf_plugin_list:-}" ]; then
         if [ -n "${_cached_asdf_plugin_list_file:-}" ]; then
-            while [ ! -s "${_cached_asdf_plugin_list_file}" ]; do
+            while [ ! -f "${_cached_asdf_plugin_list_file}" ] || [ ! -s "${_cached_asdf_plugin_list_file}" ]; do
                 sleep 0.1
             done
             _cached_asdf_plugin_list="$(cat "${_cached_asdf_plugin_list_file}")"
@@ -78,15 +78,26 @@ _asdf_all_installed_plugins()
 _asdf_has_plugin()
 {
     local pluginName="$1"
-    _asdf_all_installed_plugins | grep -q "^$pluginName\$"
+    if _asdf_all_installed_plugins | grep -q "^${pluginName}\$"; then
+        true
+    else
+        # Double check in case of cache miss
+        _asdf_invalidate_plugin_list
+        _asdf_all_installed_plugins | grep -q "^${pluginName}\$"
+    fi
+}
+
+_asdf_invalidate_plugin_list()
+{
+    unset _cached_asdf_plugin_list_file
+    unset _cached_asdf_plugin_list
 }
 
 _asdf_add_plugin()
 {
     local pluginName="$1"
     if asdf plugin add "$pluginName"; then
-        unset _cached_asdf_plugin_list_file
-        unset _cached_asdf_plugin_list
+        _asdf_invalidate_plugin_list
     else
         false
     fi

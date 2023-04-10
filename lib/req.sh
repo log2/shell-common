@@ -433,6 +433,7 @@ req_check()
     local _temp_cached_asdf_plugin_list_file=""
     if has_asdf; then
         _temp_cached_asdf_plugin_list_file="$(mktemp -t "_asdf_plugin_list_cache_${programNameMarker}")"
+        touch "$_temp_cached_asdf_plugin_list_file"
         {
             local _temp_cached_asdf_plugin_list_file_during_build
             _temp_cached_asdf_plugin_list_file_during_build="$(mktemp -t "_asdf_plugin_list_cache_${programNameMarker}_incomplete")"
