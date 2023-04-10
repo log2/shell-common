@@ -435,7 +435,12 @@ req_check()
     local _temp_cached_asdf_plugin_list_file=""
     if has_asdf; then
         _temp_cached_asdf_plugin_list_file="$(mktemp -t "_asdf_plugin_list_cache_${programNameMarker}")"
-        _asdf_all_installed_plugins >"$_temp_cached_asdf_plugin_list_file" &
+        {
+            local _temp_cached_asdf_plugin_list_file_during_build
+            _temp_cached_asdf_plugin_list_file_during_build="$(mktemp -t "_asdf_plugin_list_cache_${programNameMarker}_incomplete")"
+            _asdf_all_installed_plugins >"$_temp_cached_asdf_plugin_list_file_during_build"
+            mv "$_temp_cached_asdf_plugin_list_file_during_build" "$_temp_cached_asdf_plugin_list_file"
+        } &
     fi
     tempVersions=()
     for entry in $_REQ_INCLUDED; do
