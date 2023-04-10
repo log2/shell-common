@@ -211,10 +211,10 @@ _asdf_find_latest()
         {
             {
                 asdf list-all "$pluginName" 2>/dev/null || true
-            }
+            } | tr -d '*' | xargs | tr ' ' '\n'
             {
                 asdf list "$pluginName" 2>/dev/null || true
-            } | xargs | tr ' ' '\n' # merge with already installed versions, to overcome transient misbehaviour in list-all of some plugins (e.g., see https://github.com/sudermanjr/asdf-yq/issues/10)
+            } | tr -d '*' | xargs | tr ' ' '\n' # merge with already installed versions, to overcome transient misbehaviour in list-all of some plugins (e.g., see https://github.com/sudermanjr/asdf-yq/issues/10)
         }
         _grab_latest()
         {
