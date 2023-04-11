@@ -96,9 +96,15 @@ _asdf_invalidate_plugin_list()
 _asdf_add_plugin()
 {
     local pluginName="$1"
-    if asdf plugin add "$pluginName"; then
+    asdf plugin add "$pluginName"
+    local result=$?
+    if [ $result == 0 ]; then
         _asdf_invalidate_plugin_list
+    elif [ $result == 2 ]; then
+        # asdf plugin add returns 2 if the plugin is already installed
+        true
     else
+        # asdf plugin add returns 1 if the plugin is not available
         false
     fi
 }
