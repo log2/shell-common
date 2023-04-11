@@ -487,7 +487,7 @@ req_check()
     if ((${#failedRequirements[@]} > 0)); then
         whine "Cowardly refusing to execute this script without the required programs ${failedRequirements[*]}. Have a nice day!"
     elif ((${#failedOptionalRequirements[@]} > 0)); then
-        log "$(yellow "Despite optional requirements ${failedOptionalRequirements[*]} are missing, this script $(ab "$(tildify "$0")")")" "$(yellow "can still start.")"
+        log "$(yellow "Despite requirements ${failedOptionalRequirements[*]} are missing, they are optional, so this script $(ab "$(tildify "$0")")")" "$(yellow "can still start.")"
     else
         log "$(green "Script sanity checks completed successfully, current script $(ab "$(tildify "$0")") can start.")"
     fi
