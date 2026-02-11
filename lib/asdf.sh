@@ -10,7 +10,9 @@ _ASDF_CHECKED=no
 
 _initialize_asdf()
 {
-    # Ensure that asdf integration is installed (otherwise, we couldn't export asdf-set plugin versions)
+    # asdf >= 0.16 is a Go binary that no longer provides asdf.sh;
+    # source_if_exists handles the missing file gracefully for new versions,
+    # while still initializing the shell function for asdf < 0.16.
     source_if_exists "${ASDF_DIR:-$HOME/.asdf}/asdf.sh"
     if exists brew; then
         source_if_exists "$(brew --prefix asdf)/libexec/asdf.sh"
@@ -141,11 +143,29 @@ ensure_asdf_plugin_version()
     fi
 }
 
+_asdf_has_shell_command()
+{
+    if [ -z "${_ASDF_HAS_SHELL_CMD:-}" ]; then
+        if asdf help 2>&1 | grep -q "asdf shell"; then
+            _ASDF_HAS_SHELL_CMD=yes
+        else
+            _ASDF_HAS_SHELL_CMD=no
+        fi
+    fi
+    [ "$_ASDF_HAS_SHELL_CMD" = "yes" ]
+}
+
 _asdf_set_shell_version()
 {
     local pluginName="$1"
     local version="$2"
-    asdf shell "$pluginName" "$version"
+    if _asdf_has_shell_command && asdf shell "$pluginName" "$version"; then
+        : # asdf < 0.16 (shell function)
+    else
+        # asdf >= 0.16 (Go binary): 'asdf shell' removed, set env var directly
+        local varName="ASDF_${pluginName^^}_VERSION"
+        export "$varName"="$version"
+    fi
 }
 
 ensure_asdf_plugin_version_shell()
@@ -201,7 +221,7 @@ _asdf_find_latest()
         local latestMatchingVersion
         _get_all_versions()
         {
-            asdf list-all "$pluginName" 2>/dev/null
+            asdf list-all "$pluginName" 2>/dev/null || asdf list all "$pluginName" 2>/dev/null # asdf >= 0.16 renamed list-all to list all
             asdf list "$pluginName" 2>/dev/null | xargs | tr ' ' '\n' # merge with already installed versions, to overcome transient misbehaviour in list-all of some plugins (e.g., see https://github.com/sudermanjr/asdf-yq/issues/10)
         }
         _grab_latest()
