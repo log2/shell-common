@@ -1,0 +1,26 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+        args:
+          - --allow-multiple-documents
+      - id: check-added-large-files
+      - id: check-merge-conflict
+      - id: check-case-conflict
+      - id: check-shebang-scripts-are-executable
+  - repo: https://github.com/log2/pre-commit-shfmt
+    rev: v0.2.0
+    hooks:
+      - id: shfmt
+        args: [-i, "4", -bn, -ci, -fn]
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.10.0.1
+    hooks:
+      - id: shellcheck
+        args: [--external-sources, --shell=bash, --severity=warning]
+        exclude: ^tests/vendor/|^stub/
