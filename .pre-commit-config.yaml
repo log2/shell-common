@@ -13,8 +13,8 @@ repos:
       - id: check-merge-conflict
       - id: check-case-conflict
       - id: check-shebang-scripts-are-executable
-  - repo: https://github.com/log2/pre-commit-shfmt
-    rev: v0.2.0
+  - repo: https://github.com/log2/shfmt-common
+    rev: v0.1.0
     hooks:
       - id: shfmt
         args: [-i, "4", -bn, -ci, -fn]
