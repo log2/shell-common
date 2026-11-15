@@ -1,12 +1,9 @@
-[submodule "tests/vendor/bats"]
-	path = tests/vendor/bats
-	url = https://github.com/sstephenson/bats
 [submodule "tests/vendor/bats-assert"]
 	path = tests/vendor/bats-assert
-	url = https://github.com/ztombol/bats-assert
+	url = https://github.com/bats-core/bats-assert
 [submodule "tests/vendor/bats-support"]
 	path = tests/vendor/bats-support
-	url = https://github.com/ztombol/bats-support
+	url = https://github.com/bats-core/bats-support
 [submodule "tests/vendor/bats-file"]
 	path = tests/vendor/bats-file
-	url = https://github.com/ztombol/bats-file
+	url = https://github.com/bats-core/bats-file
