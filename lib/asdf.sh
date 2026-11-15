@@ -180,8 +180,10 @@ _derive_asdf_plugin_name()
 
 _asdf_version_cleanup()
 {
-    local version="$1"
-    echo "${version/ *\*/}" | xargs
+    # Reduce possibly multi-line `asdf list`/`asdf latest` output to a single version:
+    # strip the current-version marker (*) and whitespace per line, then pick the highest.
+    local versions="$1"
+    printf '%s\n' "$versions" | tr -d '* \t\r' | grep -v '^$' | sort -V | tail -1
 }
 
 _asdf_find_latest()
@@ -199,7 +201,10 @@ _asdf_find_latest()
             fi
         fi
     fi
-    if ! asdf latest "$pluginName" "$pluginVersionPrefix" 2>/dev/null; then
+    local latestVersion
+    if latestVersion="$(asdf latest "$pluginName" "$pluginVersionPrefix" 2>/dev/null)" && [ -n "$latestVersion" ]; then
+        _asdf_version_cleanup "$latestVersion"
+    else
         # Fallback when GitHub quota is exhausted
         local latestMatchingVersion
         _get_all_versions()
